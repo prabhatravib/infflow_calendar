@@ -5,10 +5,55 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Infflow Calendar</title>
+<<<<<<< HEAD
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <script>
       mermaid.initialize({ startOnLoad: true });
     </script>
+=======
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <script>
+      // Initialize Mermaid and set a global flag when ready
+      mermaid.initialize({ 
+        startOnLoad: true,
+        theme: 'default',
+        flowchart: {
+          useMaxWidth: true,
+          htmlLabels: true
+        }
+      });
+      
+      // Set global flag when Mermaid is ready
+      window.mermaidReady = true;
+      console.log('🎨 Mermaid library loaded and initialized');
+    </script>
+    <style>
+      /* Ensure Mermaid SVG is properly sized and visible */
+      .mermaid svg {
+        max-width: none !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 300px !important;
+        display: block !important;
+        overflow: visible !important;
+      }
+      
+      /* Override any Mermaid-injected styles that might restrict sizing */
+      #mermaid-flowchart svg {
+        max-width: none !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 300px !important;
+      }
+      
+      /* Ensure the container has proper dimensions */
+      #mermaid-flowchart {
+        min-height: 400px !important;
+        width: 100% !important;
+        overflow: visible !important;
+      }
+    </style>
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
   </head>
   <body>
     <div id="root"></div>

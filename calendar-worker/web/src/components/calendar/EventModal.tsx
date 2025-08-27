@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+<<<<<<< HEAD
 import mermaid from 'mermaid';
 import type { Event, CreateEventRequest, UpdateEventRequest } from '../../lib/api';
 
@@ -166,6 +167,54 @@ export function EventModal({
       setIsLoading(false);
     }
   };
+=======
+import { Event } from '../../types';
+import { EventDetailsForm } from './EventDetailsForm';
+import { EchoFlowchartTab } from './EchoFlowchartTab';
+
+interface EventModalProps {
+  isOpen: boolean;
+  event?: Event | null;
+  selectedDate?: Date;
+  selectedHour?: number;
+  onClose: () => void;
+  onSave: (eventData: Partial<Event>) => Promise<void>;
+  onDelete?: (eventId: string) => Promise<void>;
+  calendarId: string;
+  onEventsRefresh?: () => Promise<void>;
+}
+
+export const EventModal: React.FC<EventModalProps> = ({
+  isOpen,
+  event,
+  selectedDate,
+  selectedHour,
+  onClose,
+  onSave,
+  onDelete,
+  calendarId,
+  onEventsRefresh
+}) => {
+  const [activeTab, setActiveTab] = useState<'details' | 'echo'>('details');
+  const [flowchart, setFlowchart] = useState<string>('');
+  const [hasEcho, setHasEcho] = useState(false);
+  const [isGeneratingEcho, setIsGeneratingEcho] = useState(false);
+
+  // Determine if this is editing an existing event or creating a new one
+  const isEditing = !!event;
+  const modalTitle = isEditing ? 'Edit Event' : 'Create Event';
+
+  // Check if event has echo/flowchart
+  useEffect(() => {
+    if (event?.flowchart) {
+      setFlowchart(event.flowchart);
+      setHasEcho(true);
+    } else {
+      setFlowchart('');
+      setHasEcho(false);
+    }
+  }, [event]);
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
 
   const handleEchoGeneration = async () => {
     if (!event?.id) return;
@@ -174,6 +223,7 @@ export function EventModal({
     try {
       const response = await fetch(`/api/events/${event.id}/echo`, {
         method: 'POST',
+<<<<<<< HEAD
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: 'demo-user' })
       });
@@ -194,11 +244,34 @@ export function EventModal({
     } catch (error) {
       console.error('Error generating echo:', error);
       alert('Failed to generate echo events');
+=======
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ user_id: 'default_user' })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('📊 Echo API response data:', data);
+        
+        if (data.data?.mermaid) {
+          console.log('🔗 Mermaid flowchart code:', data.data.mermaid);
+          setFlowchart(data.data.mermaid);
+          setHasEcho(true);
+        }
+      } else {
+        console.error('❌ Echo generation failed:', response.status);
+      }
+    } catch (error) {
+      console.error('❌ Error generating echo:', error);
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
     } finally {
       setIsGeneratingEcho(false);
     }
   };
 
+<<<<<<< HEAD
   const handleEchoReset = async () => {
     if (!event?.id) return;
     
@@ -225,15 +298,26 @@ export function EventModal({
     }
   };
 
+=======
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+<<<<<<< HEAD
       <div className="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4">
         <div className="px-4 py-2 border-b border-gray-100">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">
               {event ? 'Edit Event' : 'New Event'}
+=======
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden">
+        {/* Header */}
+        <div className="px-4 py-2 border-b border-gray-100">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900">
+              {modalTitle}
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
             </h2>
             <button
               type="button"
@@ -276,6 +360,7 @@ export function EventModal({
           </div>
         </div>
         
+<<<<<<< HEAD
         {activeTab === 'details' && (
           <form onSubmit={handleSubmit} className="px-4 py-2">
             <div className="space-y-2">
@@ -487,8 +572,40 @@ export function EventModal({
               </button>
             </div>
           </div>
+=======
+        {/* Tab Content */}
+        {activeTab === 'details' && (
+          <EventDetailsForm
+            event={event}
+            selectedDate={selectedDate}
+            selectedHour={selectedHour}
+            onSave={onSave}
+            onDelete={onDelete}
+            onClose={onClose}
+            onGenerateEcho={handleEchoGeneration}
+            isGeneratingEcho={isGeneratingEcho}
+            hasEcho={hasEcho}
+            calendarId={calendarId}
+            onEventsRefresh={onEventsRefresh}
+          />
+        )}
+        
+        {activeTab === 'echo' && (
+          <EchoFlowchartTab
+            flowchart={flowchart}
+            onBackToDetails={() => setActiveTab('details')}
+            onResetEcho={() => {
+              setFlowchart('');
+              setHasEcho(false);
+            }}
+          />
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
         )}
       </div>
     </div>
   );
+<<<<<<< HEAD
 }
+=======
+};
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837

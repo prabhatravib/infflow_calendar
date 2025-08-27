@@ -1,13 +1,22 @@
 import { useState, useCallback } from 'react';
+<<<<<<< HEAD
 
+=======
+//comment
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
 export interface TogglePositions {
   earlyToggle: number | null;
   lateToggle: number | null;
 }
 
 export function useSleepToggles() {
+<<<<<<< HEAD
   const [lateHoursCollapsed, setLateHoursCollapsed] = useState(false);
   const [earlyHoursCollapsed, setEarlyHoursCollapsed] = useState(false);
+=======
+  const [lateHoursCollapsed, setLateHoursCollapsed] = useState(true);
+  const [earlyHoursCollapsed, setEarlyHoursCollapsed] = useState(true);
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
 
   // Filter hours based on sleep toggle states
   const filterHoursByToggles = useCallback((allHours: Date[]) => {

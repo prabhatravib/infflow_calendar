@@ -12,7 +12,11 @@ export function ListView({ events, onEventClick, className = '' }: ListViewProps
   const [showWork, setShowWork] = useState(true);
   const [showFun, setShowFun] = useState(true);
   const [showOther, setShowOther] = useState(true);
+<<<<<<< HEAD
   const [showWeather, setShowWeather] = useState(true);
+=======
+  // Removed showWeather state since Weather is not an event type
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
 
   // Ensure events is always an array
   const safeEvents = Array.isArray(events) ? events : [];
@@ -55,8 +59,14 @@ export function ListView({ events, onEventClick, className = '' }: ListViewProps
         return false;
       }
       
+<<<<<<< HEAD
       if (event.type === 'weather-warning') {
         return showWeather;
+=======
+      // Weather events are always shown as they are background information
+      if (event.type === 'weather-warning') {
+        return true;
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
       }
       
       const eventType = event.eventType || 'other';
@@ -71,7 +81,11 @@ export function ListView({ events, onEventClick, className = '' }: ListViewProps
           return true;
       }
     });
+<<<<<<< HEAD
   }, [sortedEvents, showWork, showFun, showOther, showWeather]);
+=======
+  }, [sortedEvents, showWork, showFun, showOther]);
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
 
   const getEventTypeColor = (event: Event) => {
     if (event.type === 'weather-warning') {
@@ -137,6 +151,7 @@ export function ListView({ events, onEventClick, className = '' }: ListViewProps
             <span className="text-sm text-gray-700">Other</span>
           </label>
           
+<<<<<<< HEAD
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
@@ -146,6 +161,9 @@ export function ListView({ events, onEventClick, className = '' }: ListViewProps
             />
             <span className="text-sm text-gray-700">Weather</span>
           </label>
+=======
+          {/* Weather checkbox removed - Weather is not an event type but background information */}
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
         </div>
       </div>
 

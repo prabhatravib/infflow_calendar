@@ -159,7 +159,11 @@ export function Calendar({ events, onEventClick, onDateClick, onTimeSlotClick, c
           </div>
 
           {/* Right side - Today button */}
+<<<<<<< HEAD
           <div>
+=======
+          <div className="flex items-center space-x-3">
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
             <button
               onClick={handleToday}
               className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"

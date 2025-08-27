@@ -1,5 +1,9 @@
 import { Event, CreateEventRequest, UpdateEventRequest } from '../types';
 import { generateUUID, getCurrentTimestamp } from '../utils/helpers';
+<<<<<<< HEAD
+=======
+import { CALENDAR_ID } from '../utils/constants';
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
 
 export class DatabaseService {
   constructor(private db: any) {}
@@ -19,8 +23,13 @@ export class DatabaseService {
     const now = getCurrentTimestamp();
 
     await this.db.prepare(`
+<<<<<<< HEAD
       INSERT INTO events (id, calendar_id, title, description, start, end, tz, eventType, location, type, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'regular', ?, ?)
+=======
+      INSERT INTO events (id, calendar_id, title, description, start, end, tz, eventType, location, type, source, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'regular', ?, ?, ?)
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
     `).bind(
       id, 
       eventData.calendar_id, 
@@ -31,6 +40,10 @@ export class DatabaseService {
       eventData.tz, 
       eventData.eventType || 'other', 
       eventData.location || '', 
+<<<<<<< HEAD
+=======
+      eventData.source || 'local',
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
       now, 
       now
     ).run();
@@ -46,6 +59,10 @@ export class DatabaseService {
       eventType: eventData.eventType || 'other',
       location: eventData.location,
       type: 'regular',
+<<<<<<< HEAD
+=======
+      source: eventData.source || 'local',
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
       created_at: now,
       updated_at: now
     };
@@ -111,6 +128,19 @@ export class DatabaseService {
     return (result as Event) || null;
   }
 
+<<<<<<< HEAD
+=======
+  async getEventsBySource(calendarId: string, source: string): Promise<Event[]> {
+    const result = await this.db.prepare(`
+      SELECT * FROM events 
+      WHERE calendar_id = ? AND source = ?
+      ORDER BY start ASC
+    `).bind(calendarId, source).all();
+    
+    return (result.results as Event[]) || [];
+  }
+
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
   async createEchoEvents(parentEvent: Event, followups: any[], mermaidCode: string, userId: string): Promise<any[]> {
     const createdEvents = [];
     
@@ -190,8 +220,13 @@ export class DatabaseService {
       await this.db.prepare('INSERT INTO users (id, email) VALUES (?, ?)').bind(userId, `${userId}@example.com`).run();
     }
 
+<<<<<<< HEAD
     // Check if calendar exists
     let calendar = await this.db.prepare('SELECT * FROM calendars WHERE user_id = ?').bind(userId).first();
+=======
+    // Check if calendar with this specific ID exists
+    let calendar = await this.db.prepare('SELECT * FROM calendars WHERE id = ?').bind(calendarId).first();
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
     
     if (!calendar) {
       await this.db.prepare('INSERT INTO calendars (id, user_id, name) VALUES (?, ?, ?)').bind(calendarId, userId, 'My Calendar').run();

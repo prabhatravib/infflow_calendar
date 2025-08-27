@@ -6,6 +6,11 @@ import { echoRouter } from './routes/echo';
 import { weatherRouter } from './routes/weather';
 import { icsRouter } from './routes/ics';
 import { seedRouter } from './routes/seed';
+<<<<<<< HEAD
+=======
+import { googleOAuthRouter } from './routes/google-oauth';
+import { googleCalendarRouter } from './routes/google-calendar';
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
 import { AssetService } from './services/asset-service';
 import { Env } from './types';
 
@@ -21,6 +26,11 @@ app.route('/', echoRouter);
 app.route('/', weatherRouter);
 app.route('/', icsRouter);
 app.route('/', seedRouter);
+<<<<<<< HEAD
+=======
+app.route('/api', googleOAuthRouter);
+app.route('/api', googleCalendarRouter);
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
 
 // Static asset handler - must be last to catch all non-API routes
 app.get('*', async (c) => {

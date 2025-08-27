@@ -1,0 +1,348 @@
+/* Ensure FullCalendar uses consistent 73px height for all time slots (~20% less than 91px) */
+:root {
+  --fc-slot-h: 73px;
+  /* FullCalendar v6 uses this variable to size time grid rows */
+  --fc-slot-min-height: 73px;
+  /* Hour separator thickness: use 2px so it appears ~40% thicker universally */
+  --fc-hour-separator-w: 2px;
+}
+
+/* Scope the same variables directly on FullCalendar roots to override theme defaults */
+.fc,
+.fc-theme-standard,
+.fc-timegrid {
+  --fc-slot-min-height: 73px !important;
+}
+
+/* Keep header/all-day content visible; just suppress scrollbars in those rows */
+/* The previous selector hid .fc-scrollgrid-sync-inner which contains the header text */
+.fc-timegrid .fc-scrollgrid-section-header .fc-scroller,
+.fc-timegrid-all-day .fc-scroller {
+  overflow: hidden !important; /* no scrollbar in header/all-day */
+}
+
+/* Explicitly ensure header content is displayed */
+.fc-timegrid .fc-scrollgrid-section-header .fc-scrollgrid-sync-inner,
+.fc-timegrid-all-day .fc-scrollgrid-sync-inner {
+  display: block !important;
+}
+
+/* Remove the up/down scroll arrows column only for header and all‑day (keep body shrink for alignment) */
+.fc-timegrid .fc-scrollgrid-section-header .fc-scrollgrid-shrink,
+.fc-timegrid .fc-scrollgrid-section-header th.fc-scrollgrid-shrink,
+.fc-timegrid-all-day .fc-scrollgrid-shrink,
+.fc-timegrid-all-day th.fc-scrollgrid-shrink {
+  display: none !important; /* hide the cell entirely */
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+.fc-timegrid .fc-scrollgrid-section-header .fc-scrollgrid-shrink *,
+.fc-timegrid-all-day .fc-scrollgrid-shrink * {
+  display: none !important;
+}
+
+/* Hide scrollbar arrow buttons ONLY in header and all‑day; keep them in main viewport */
+.fc-timegrid .fc-scrollgrid-section-header .fc-scroller::-webkit-scrollbar-button,
+.fc-timegrid-all-day .fc-scroller::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+/* Keep viewport scrollbars normal; thin scrollbars for header/all‑day if they ever appear */
+.fc-timegrid .fc-scrollgrid-section-header .fc-scroller,
+.fc-timegrid-all-day .fc-scroller { scrollbar-width: none; }
+
+/* ===============================================
+   FullCalendar Grid Styles - Working WITH Native Rendering
+   =============================================== */
+
+/* Let FullCalendar handle the base borders - don't override everything */
+
+/* Just style the borders that exist, don't remove and re-add */
+.fc-theme-standard .fc-scrollgrid {
+  border-color: var(--gray-300);
+}
+
+.fc-theme-standard .fc-scrollgrid td,
+.fc-theme-standard .fc-scrollgrid th {
+  border-color: var(--gray-200);
+}
+
+/* Let FullCalendar manage slot heights natively to keep axis/grid in sync */
+.fc-timegrid-slot {
+  box-sizing: border-box !important;
+  position: relative; /* allow drawing a line via ::after */
+  height: var(--fc-slot-h) !important;
+  min-height: var(--fc-slot-h) !important;
+}
+
+/* Style the time slot borders that FullCalendar provides */
+.fc-theme-standard .fc-timegrid-slot,
+.fc-theme-standard .fc-timegrid-slot-minor,
+.fc-theme-standard .fc-timegrid-slot-lane {
+  border-color: var(--gray-200) !important;
+  /* Draw both top and bottom to guarantee a rule per hour regardless of FC internals */
+  border-top: var(--fc-hour-separator-w) solid var(--gray-200) !important;
+  border-bottom: var(--fc-hour-separator-w) solid var(--gray-200) !important;
+  height: var(--fc-slot-h) !important;
+  min-height: var(--fc-slot-h) !important;
+}
+
+/* Overlay a separator on every slot to ensure visibility above stacking contexts */
+.fc-timegrid-slot::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--fc-hour-separator-w);
+  background: var(--gray-200);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Minor slots inherit native height */
+.fc-timegrid-slot-minor { box-sizing: border-box !important; }
+/* Ensure minor lanes inherit explicit height */
+.fc-timegrid-slot-minor,
+.fc-timegrid-slot-lane {
+  height: var(--fc-slot-h) !important;
+  min-height: var(--fc-slot-h) !important;
+}
+
+/* Labels follow native heights; keep only typography */
+.fc-timegrid-slot-label {
+  font-size: 14px !important;
+  color: var(--gray-600) !important;
+  font-weight: 500 !important;
+  padding: 0 8px !important;
+  vertical-align: middle !important;
+  background: var(--gray-50);
+  box-sizing: border-box !important;
+}
+
+/* Style column borders */
+.fc-theme-standard .fc-timegrid-col:not(:last-child) {
+  border-right-color: var(--gray-200) !important;
+}
+
+/* Cell hover effect */
+.fc-timegrid-col-events {
+  position: relative;
+  z-index: 1;
+}
+
+.fc-timegrid-col-events::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.fc-timegrid-col-events:hover::before {
+  background: var(--primary-color-light, #e3eafe) !important;
+  box-shadow: 0 0 0 2px var(--primary-color, #4f6bed) inset !important;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Day headers */
+.fc-col-header-cell {
+  background: var(--gray-50);
+  border-bottom: 2px solid var(--gray-300) !important;
+  padding: 8px;
+  transition: var(--transition-fast);
+}
+
+/* Time axis */
+.fc-timegrid-axis {
+  border-right-color: var(--gray-200) !important;
+  position: relative; /* For sleep toggle overlays and axis now indicator */
+}
+
+/* Widen the time axis to make room for hour label + minute marker */
+.fc-timegrid .fc-scrollgrid-section-body .fc-scrollgrid-shrink {
+  width: 96px !important;
+  min-width: 96px !important;
+  max-width: 120px !important; /* allow slight expansion on some themes */
+}
+
+/* Ensure axis labels do not overlap the minute label; minute label floats on top */
+.axis-now-indicator-minute {
+  pointer-events: none;
+  color: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Time grid slots container for sleep toggle overlays */
+.fc-timegrid-slots {
+  position: relative; /* For sleep toggle overlays */
+}
+
+/* Robust fallback: ensure every row paints a horizontal separator */
+.fc-timegrid-slots table tr > td {
+  border-bottom: var(--fc-hour-separator-w) solid var(--gray-200) !important;
+  height: var(--fc-slot-h) !important;
+  min-height: var(--fc-slot-h) !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+.fc-timegrid-axis table tr > td {
+  border-bottom: var(--fc-hour-separator-w) solid var(--gray-200) !important;
+  height: var(--fc-slot-h) !important;
+  min-height: var(--fc-slot-h) !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Extra-fallback: paint a 1px rule at the bottom of every row via background */
+.fc-timegrid-slots table tbody tr {
+  background-image: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0) calc(100% - var(--fc-hour-separator-w)),
+    var(--gray-200) calc(100% - var(--fc-hour-separator-w)),
+    var(--gray-200) 100%
+  );
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  height: var(--fc-slot-h) !important;
+  min-height: var(--fc-slot-h) !important;
+}
+.fc-timegrid-axis table tbody tr {
+  background-image: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0) calc(100% - var(--fc-hour-separator-w)),
+    var(--gray-200) calc(100% - var(--fc-hour-separator-w)),
+    var(--gray-200) 100%
+  );
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+/* Ensure inserted sleep-toggle rows show separators above and below */
+.fc-timegrid-slots .sleep-toggle-row td {
+  border-top: var(--fc-hour-separator-w) solid var(--gray-200) !important;
+  border-bottom: var(--fc-hour-separator-w) solid var(--gray-200) !important;
+}
+
+/* Axis spacer row mirrors height and separator for alignment */
+.fc-timegrid-axis .sleep-toggle-axis-row td {
+  height: 30px !important;
+  min-height: 30px !important;
+  max-height: 30px !important;
+  padding: 0 !important;
+  border-top: var(--fc-hour-separator-w) solid var(--gray-200) !important;
+  border-bottom: var(--fc-hour-separator-w) solid var(--gray-200) !important;
+  background: transparent !important;
+  position: relative;
+}
+
+/* Axis: paint a guarantee line at the bottom of each axis cell */
+.fc-timegrid-axis table tr > td { position: relative; }
+.fc-timegrid-axis table tr > td::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--fc-hour-separator-w);
+  background: var(--gray-200);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Toolbar styling */
+.fc-toolbar {
+  background: var(--white);
+  padding: 11px 20px;
+  border-bottom: 1px solid var(--gray-200);
+  flex-shrink: 0;
+}
+
+.fc-toolbar-title {
+  font-size: 1.05rem !important;
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+/* Day header content */
+.fc-col-header-cell-cushion {
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  color: var(--gray-700) !important;
+}
+
+/* Today indicator styling */
+.fc-day-today {
+  background: rgba(102, 126, 234, 0.05) !important;
+}
+
+.fc-day-today .fc-col-header-cell {
+  background: rgba(102, 126, 234, 0.1) !important;
+  border-bottom-color: var(--primary-color) !important;
+}
+
+.fc-day-today .fc-col-header-cell-cushion {
+  color: var(--primary-color) !important;
+  font-weight: 700 !important;
+}
+
+/* Current time indicator */
+.fc-timegrid-now-indicator-line {
+  /* Default to black; JS will override to yellow/gray/black dynamically */
+  border-color: #000000;
+  border-width: 2px !important;
+  z-index: 5;
+  position: relative; /* allow end-cap dots */
+}
+
+.fc-timegrid-now-indicator-arrow {
+  display: none !important; /* hide left-side arrow marker; axis minute marker replaces it */
+}
+
+/* Round end caps for the now indicator line */
+.fc-timegrid-now-indicator-line::before,
+.fc-timegrid-now-indicator-line::after {
+  content: '';
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor; /* uses the element's color; set via JS */
+  top: -2px; /* center the 6px dot on a 2px line */
+}
+.fc-timegrid-now-indicator-line::before { left: -3px; }
+.fc-timegrid-now-indicator-line::after { right: -3px; }
+
+/* All-day section */
+.fc-timegrid-all-day-slot {
+  background: var(--gray-50) !important;
+  border-bottom: 2px solid var(--gray-300) !important;
+  min-height: 2em;
+}
+
+/* Focus states for accessibility */
+.fc-button:focus,
+.fc-event:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Ensure time slots can be clicked */
+.fc-timegrid-col-bg {
+  cursor: pointer;
+}
+
+/* Highlight effect */
+.fc-highlight {
+  background: var(--primary-color-light, #e3eafe) !important;
+  opacity: 0.3;
+}
+
+/* Remove gradient fallback – rely on cell borders only to avoid duplicate lines */

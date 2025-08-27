@@ -1,0 +1,222 @@
+/* Sleep Toggle Container Styles - Row Insertion Approach
+   ===============================================
+   This approach inserts toggle bars as actual table rows
+   between time slots without affecting the grid structure
+   =============================================== */
+
+/* Enable sleep toggles */
+
+/* Sleep toggle container styling (used inside overlay) */
+.sleep-toggle-container { display: flex !important; }
+
+.sleep-toggle-container:hover {
+  background: rgba(46, 204, 113, 0.25);
+  color: #333;
+}
+
+/* Sleep toggle row - ensures proper height and visibility */
+
+/* Spacer-row approach reverted in favor of overlay (prevents consuming time). Keep rules harmless. */
+.sleep-toggle-row { display: none !important; }
+.sleep-toggle-row td { display: none !important; }
+
+/* Early bar sits after 6am row → draw only a bottom border to continue the 6am separator */
+.sleep-toggle-early-row td { border-bottom: var(--fc-hour-separator-w, 1.4px) solid var(--gray-200) !important; }
+
+/* Late bar sits before 10pm row → draw only a top border to precede 10pm separator */
+.sleep-toggle-late-row td { border-top: var(--fc-hour-separator-w, 1.4px) solid var(--gray-200) !important; }
+
+/* Early/Late specific styling */
+.sleep-toggle-early {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.sleep-toggle-late {
+  box-shadow: 0 -2px 4px rgba(0,0,0,0.05);
+}
+
+/* Ensure the toggles don't interfere with event rendering */
+.fc-timegrid-slots .sleep-toggle-row {
+  pointer-events: none;
+}
+
+.fc-timegrid-slots .sleep-toggle-container {
+  pointer-events: auto;
+}
+
+
+/* Overlay helpers used to guarantee separator visibility near toggle rows */
+.sleep-toggle-overlay { display: block; }
+
+/* Ultra-thin separators painted above content to guarantee visibility */
+.sleep-toggle-separator {
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: var(--fc-hour-separator-w, 2px) !important;
+  background: var(--gray-200) !important;
+  pointer-events: none !important;
+  z-index: 2 !important;
+}
+
+/* Preserve grid separators across all time slots with high specificity */
+.fc-theme-standard .fc-timegrid-slot,
+.fc-theme-standard .fc-timegrid-slot-minor,
+.fc-theme-standard .fc-timegrid-slot-lane {
+  border-top: var(--fc-hour-separator-w, 2px) solid var(--gray-200) !important;
+  border-bottom: var(--fc-hour-separator-w, 2px) solid var(--gray-200) !important;
+}
+
+.fc-timegrid-slot::after {
+  content: '' !important;
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  height: var(--fc-hour-separator-w, 2px) !important;
+  background: var(--gray-200) !important;
+  pointer-events: none !important;
+  z-index: 2 !important;
+}
+
+.fc-timegrid-slots table tr > td,
+.fc-timegrid-axis table tr > td {
+  border-bottom: var(--fc-hour-separator-w, 2px) solid var(--gray-200) !important;
+}
+
+/* Time range visibility control */
+.collapsed-time-slot {
+  display: none !important;
+}
+
+/* Style early hours (12 AM - 6 AM) */
+.fc-timegrid-slot.early-hours {
+  transition: opacity 0.3s ease;
+}
+
+.fc-timegrid-slot.early-hours.collapsed-time-slot {
+  opacity: 0;
+  height: 0 !important;
+  overflow: hidden;
+}
+
+/* Style late hours (10 PM - 12 AM) */
+.fc-timegrid-slot.late-hours {
+  transition: opacity 0.3s ease;
+}
+
+.fc-timegrid-slot.late-hours.collapsed-time-slot {
+  opacity: 0;
+  height: 0 !important;
+  overflow: hidden;
+}
+
+/* Ensure toggle rows are always visible when collapsed */
+.sleep-toggle-early-row, .sleep-toggle-late-row { display: table-row !important; }
+
+/* ===============================================
+   Simple Sleep Toggles - Floating Button Approach
+   =============================================== */
+
+/* Simple sleep toggles container */
+.simple-sleep-toggles-container {
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
+  z-index: 1000 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+  pointer-events: auto !important;
+}
+
+/* Simple sleep toggle buttons */
+.simple-sleep-toggle {
+  padding: 8px 12px !important;
+  background: #007bff !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  font-size: 12px !important;
+  white-space: nowrap !important;
+  transition: background 0.2s ease !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  font-weight: 500 !important;
+  min-width: 120px !important;
+}
+
+.simple-sleep-toggle:hover {
+  background: #0056b3 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+}
+
+.simple-sleep-toggle:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+/* Early/Late specific button styling */
+.simple-sleep-toggle-early {
+  background: #28a745 !important;
+}
+
+.simple-sleep-toggle-early:hover {
+  background: #218838 !important;
+}
+
+.simple-sleep-toggle-late {
+  background: #28a745 !important;
+  color: white !important;
+}
+
+.simple-sleep-toggle-late:hover {
+  background: #218838 !important;
+}
+
+/* Dark theme support */
+.calendar-dark-theme .simple-sleep-toggle,
+body.dark-theme .simple-sleep-toggle {
+  background: #2a2a2a !important;
+  color: #ccc !important;
+  border: 1px solid #555 !important;
+}
+
+.calendar-dark-theme .simple-sleep-toggle:hover,
+body.dark-theme .simple-sleep-toggle:hover {
+  background: #333 !important;
+  color: #fff !important;
+}
+
+.calendar-dark-theme .simple-sleep-toggle-early,
+body.dark-theme .simple-sleep-toggle-early {
+  background: #155724 !important;
+  color: #d4edda !important;
+  border-color: #28a745 !important;
+}
+
+.calendar-dark-theme .simple-sleep-toggle-late,
+body.dark-theme .simple-sleep-toggle-late {
+  background: #155724 !important;
+  color: #d4edda !important;
+  border-color: #28a745 !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .simple-sleep-toggles-container {
+    top: 5px !important;
+    right: 5px !important;
+    gap: 3px !important;
+  }
+  
+  .simple-sleep-toggle {
+    font-size: 11px !important;
+    padding: 6px 10px !important;
+    min-width: 100px !important;
+  }
+}
+
+/* Overlay approach is active */

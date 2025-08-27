@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mermaid Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true
+            }
+        });
+        
+        window.mermaidReady = true;
+        console.log('🎨 Mermaid library loaded and initialized');
+        
+        function testMermaid() {
+            const testFlowchart = `flowchart TD
+                A[Start] --> B{Decision?}
+                B -->|Yes| C[Do Something]
+                B -->|No| D[Do Nothing]
+                C --> E[End]
+                D --> E`;
+            
+            const container = document.getElementById('test-container');
+            container.innerHTML = '<div>🔄 Rendering test flowchart...</div>';
+            
+            mermaid.render('test-flowchart', testFlowchart).then(({ svg }) => {
+                console.log('✅ Test render successful, SVG length:', svg.length);
+                container.innerHTML = svg;
+            }).catch((error) => {
+                console.error('❌ Test render failed:', error);
+                container.innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+            });
+        }
+    </script>
+</head>
+<body>
+    <h1>Mermaid Test Page</h1>
+    <button onclick="testMermaid()">Test Mermaid Rendering</button>
+    <div id="test-container" style="border: 1px solid #ccc; padding: 20px; margin: 20px; min-height: 200px;">
+        Click the button to test Mermaid rendering
+    </div>
+</body>
+</html>

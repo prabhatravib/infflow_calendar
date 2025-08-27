@@ -3,6 +3,7 @@ import { Calendar } from './components/calendar/Calendar';
 import { EventModal } from './components/calendar/EventModal';
 import { Sidebar, EventFilters } from './components/calendar/Sidebar';
 import { LocationProvider } from './lib/contexts/LocationContext';
+<<<<<<< HEAD
 import { useEventFiltering } from './lib/hooks/useEventFiltering';
 import { fetchEvents, createEvent, updateEvent, deleteEvent, seedDemoData } from './lib/api';
 import type { Event } from './lib/api';
@@ -10,12 +11,53 @@ import type { Event } from './lib/api';
 const DEMO_CALENDAR_ID = '3c414e29-a3c3-4350-a334-5585cb22737a';
 
 function App() {
+=======
+import { fetchEvents, createEvent, updateEvent, deleteEvent, seedDemoData } from './lib/api';
+import type { Event } from './lib/api';
+import { useEventFiltering } from './lib/hooks/useEventFiltering';
+
+const DEMO_CALENDAR_ID = '3c414e29-a3c3-4350-a334-5585cb22737a';
+
+export default function App() {
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+<<<<<<< HEAD
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [selectedHour, setSelectedHour] = useState<number | undefined>();
+=======
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedHour, setSelectedHour] = useState<number | undefined>(undefined);
+
+  // Check for Google Calendar import success
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('google_import') === 'success') {
+      // Update button state to show success
+      const btn = document.getElementById('import-google-calendar') as HTMLButtonElement;
+      const status = document.getElementById('google-calendar-status') as HTMLSpanElement;
+      const text = document.getElementById('google-calendar-btn-text') as HTMLSpanElement;
+      
+      if (btn && status && text) {
+        status.textContent = '✓';
+        status.style.color = 'green';
+        status.style.fontWeight = 'bold';
+        text.textContent = 'Google Calendar Connected';
+        btn.disabled = true;
+        btn.className = 'px-4 py-2 bg-gray-400 text-white text-sm font-medium rounded-md cursor-not-allowed flex items-center space-x-2';
+      }
+      
+      // Show success notification
+      const notif = document.createElement('div');
+      notif.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50';
+      notif.textContent = 'Google Calendar imported successfully!';
+      document.body.appendChild(notif);
+      setTimeout(() => notif.remove(), 3500);
+    }
+  }, []);
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
 
   // Ensure events is always an array
   const safeEvents = Array.isArray(events) ? events : [];
@@ -61,25 +103,44 @@ function App() {
   };
 
   const handleEventClick = (event: Event) => {
+<<<<<<< HEAD
+=======
+    console.log('🔍 Event click - setting selectedEvent:', event);
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
     setSelectedEvent(event);
     setIsModalOpen(true);
   };
 
   const handleDateClick = (date: Date) => {
+<<<<<<< HEAD
     setSelectedDate(date);
     setSelectedEvent(null);
+=======
+    console.log('🔍 Date click - clearing selectedEvent, setting date:', date);
+    setSelectedEvent(null);
+    setSelectedDate(date);
+    setSelectedHour(undefined);
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
     setIsModalOpen(true);
   };
 
   const handleTimeSlotClick = (date: Date, hour: number) => {
+<<<<<<< HEAD
     setSelectedDate(date);
     setSelectedHour(hour);
     setSelectedEvent(null);
+=======
+    console.log('🔍 Time slot click - clearing selectedEvent, setting date/hour:', date, hour);
+    setSelectedEvent(null);
+    setSelectedDate(date);
+    setSelectedHour(hour);
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
     setIsModalOpen(true);
   };
 
   const handleSaveEvent = async (eventData: any) => {
     try {
+<<<<<<< HEAD
       if (selectedEvent) {
         // Update existing event
         const updatedEvent = await updateEvent(selectedEvent.id, eventData);
@@ -93,6 +154,31 @@ function App() {
         setEvents(prev => [...prev, newEvent]);
       }
       
+=======
+      let savedEvent: Event;
+      if (selectedEvent) {
+        // Update existing event
+        savedEvent = await updateEvent(selectedEvent.id, eventData);
+        setEvents(prev => prev.map(e => e.id === savedEvent.id ? savedEvent : e));
+      } else {
+        // Create new event
+        savedEvent = await createEvent({
+          ...eventData,
+          calendar_id: DEMO_CALENDAR_ID
+        });
+        setEvents(prev => [...prev, savedEvent]);
+      }
+      
+      // If this is a new event, keep the modal open and set it as the selected event
+      // so the user can generate echo events
+      if (!selectedEvent) {
+        setSelectedEvent(savedEvent);
+        // Don't close modal yet - let user generate echo events if they want
+        return;
+      }
+      
+      // For existing events, close the modal
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
       setIsModalOpen(false);
       setSelectedEvent(null);
       setSelectedDate(undefined);
@@ -106,11 +192,29 @@ function App() {
   const handleDeleteEvent = async (eventId: string) => {
     try {
       await deleteEvent(eventId);
+<<<<<<< HEAD
+=======
+      // Remove the event from local state immediately
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
       setEvents(prev => prev.filter(e => e.id !== eventId));
       setIsModalOpen(false);
       setSelectedEvent(null);
     } catch (error) {
       console.error('Error deleting event:', error);
+<<<<<<< HEAD
+=======
+      // Check if the error might be a false positive
+      // Sometimes the event is actually deleted but we get an error response
+      // In this case, we should still remove it from local state
+      if (error instanceof Error && error.message.includes('Failed to delete event')) {
+        console.warn('Delete operation may have succeeded despite error message');
+        // Still remove from local state since the event disappears after refresh
+        setEvents(prev => prev.filter(e => e.id !== eventId));
+        setIsModalOpen(false);
+        setSelectedEvent(null);
+        return;
+      }
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
       throw error;
     }
   };
@@ -157,7 +261,21 @@ function App() {
           {/* Main Content Area */}
           <div className="flex-1 p-6">
             <div className="mb-6">
+<<<<<<< HEAD
               <h1 className="text-3xl font-bold text-gray-800 mb-2">Calendar</h1>
+=======
+              <div className="flex items-center justify-between mb-2">
+                <h1 className="text-3xl font-bold text-gray-800">Calendar</h1>
+                <button
+                  id="import-google-calendar"
+                  className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors flex items-center space-x-2"
+                  onClick={() => window.location.href = '/oauth/google/start'}
+                >
+                  <span id="google-calendar-status" className="text-sm">📅</span>
+                  <span id="google-calendar-btn-text">Import Google Calendar</span>
+                </button>
+              </div>
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
               {!isLoading && (
                 <div className="text-sm text-gray-600">
                   Showing {filterStats.visible} of {filterStats.total} events
@@ -182,6 +300,10 @@ function App() {
         <EventModal
           isOpen={isModalOpen}
           onClose={() => {
+<<<<<<< HEAD
+=======
+            console.log('🔍 Modal closing - clearing all state');
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
             setIsModalOpen(false);
             setSelectedEvent(null);
             setSelectedDate(undefined);
@@ -199,5 +321,8 @@ function App() {
     </LocationProvider>
   );
 }
+<<<<<<< HEAD
 
 export default App;
+=======
+>>>>>>> 7d9f3f4f91a2b718269f0ce8a4d10767a45ef837
