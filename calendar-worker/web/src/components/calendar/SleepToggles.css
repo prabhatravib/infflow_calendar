@@ -1,0 +1,216 @@
+/* Sleep Toggle Bars - Horizontal bars integrated into calendar grid */
+
+/* Base sleep toggle bar styles */
+.sleep-toggle-bar {
+  position: absolute !important;
+  height: 30px !important;
+  background: white !important;
+  color: #374151 !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 16px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  user-select: none !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+  z-index: 1000 !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+  margin: 2px !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+/* Early hours toggle bar (between 5 AM and 6 AM) */
+.early-sleep-toggle-bar {
+  background: white !important;
+  border-color: #d1d5db !important;
+  color: #374151 !important;
+}
+
+.early-sleep-toggle-bar:hover {
+  background: #f9fafb !important;
+  border-color: #9ca3af !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+/* Late hours toggle bar (between 9 PM and 10 PM) */
+.late-sleep-toggle-bar {
+  background: white !important;
+  border-color: #d1d5db !important;
+  color: #374151 !important;
+}
+
+.late-sleep-toggle-bar:hover {
+  background: #f9fafb !important;
+  border-color: #9ca3af !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+/* Collapsed state styling */
+.sleep-toggle-bar.collapsed {
+  background: #6c757d !important;
+  border-color: #6c757d !important;
+  color: white !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+}
+
+.sleep-toggle-bar.collapsed:hover {
+  background: #5a6268 !important;
+  border-color: #5a6268 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
+}
+
+/* Enhanced collapsed state styling for inline toggle bars */
+.cursor-pointer.collapsed {
+  background: #f3f4f6 !important;
+  border-color: #d1d5db !important;
+  color: #6b7280 !important;
+  box-shadow: none !important;
+}
+
+.cursor-pointer.collapsed:hover {
+  background: #e5e7eb !important;
+  border-color: #9ca3af !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+}
+
+/* Additional styling for collapsed toggle bars to make them more visible */
+.cursor-pointer.collapsed {
+  opacity: 1 !important;
+  transition: all 0.2s ease !important;
+}
+
+.cursor-pointer.collapsed:hover {
+  opacity: 1 !important;
+  background: #e5e7eb !important;
+  border-color: #9ca3af !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+}
+
+/* Ensure collapsed toggles are always visible and clickable */
+.cursor-pointer.collapsed {
+  display: flex !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+  .sleep-toggle-bar {
+    background: #1f2937 !important;
+    border-color: #4b5563 !important;
+    color: #f9fafb !important;
+  }
+  
+  .sleep-toggle-bar:hover {
+    background: #374151 !important;
+    border-color: #6b7280 !important;
+  }
+  
+  .sleep-toggle-bar.collapsed {
+    background: #6b7280 !important;
+    border-color: #6b7280 !important;
+    color: #f9fafb !important;
+  }
+  
+  .sleep-toggle-bar.collapsed:hover {
+    background: #5a6268 !important;
+    border-color: #5a6268 !important;
+  }
+  
+  /* Dark theme support for inline collapsed toggles */
+  .cursor-pointer.collapsed {
+    background: #374151 !important;
+    border-color: #4b5563 !important;
+    color: #d1d5db !important;
+  }
+  
+  .cursor-pointer.collapsed:hover {
+    background: #4b5563 !important;
+    border-color: #6b7280 !important;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .sleep-toggle-bar {
+    height: 28px !important;
+    font-size: 12px !important;
+    padding: 0 12px !important;
+    margin: 1px !important;
+  }
+}
+
+/* Ensure proper positioning within calendar grid */
+.calendar-week-view {
+  position: relative !important;
+}
+
+.calendar-week-view .grid {
+  position: relative !important;
+}
+
+/* Time range visibility control */
+.collapsed-time-slot {
+  display: none !important;
+}
+
+/* Ensure proper background for day view time slots */
+.calendar-day-view .grid > div {
+  background: white !important;
+}
+
+.calendar-day-view .grid > div.border-b {
+  border-bottom: 1px solid #e5e7eb !important;
+}
+
+/* Style early hours (12 AM - 6 AM) */
+.time-slot-early-hours {
+  transition: opacity 0.3s ease;
+}
+
+.time-slot-early-hours.collapsed {
+  opacity: 0;
+  height: 0 !important;
+  overflow: hidden;
+}
+
+/* Style late hours (10 PM - 12 AM) */
+.time-slot-late-hours {
+  transition: opacity 0.3s ease;
+}
+
+.time-slot-late-hours.collapsed {
+  opacity: 0;
+  height: 0 !important;
+  overflow: hidden;
+}
+
+/* Ensure toggle bars are always visible and properly spaced */
+.cursor-pointer.collapsed,
+.cursor-pointer:not(.collapsed) {
+  margin: 2px !important;
+  min-height: 30px !important;
+  z-index: 10 !important;
+}
+
+/* Smooth transitions for all toggle states */
+.cursor-pointer {
+  transition: all 0.2s ease !important;
+}
+
+/* Ensure toggle bars don't disappear during state changes */
+.cursor-pointer[onclick] {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}

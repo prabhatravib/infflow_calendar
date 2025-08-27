@@ -1,0 +1,16 @@
+{
+  "name": "calendar-worker",
+  "main": "worker/index.ts",
+  "compatibility_date": "2025-08-01",
+  "assets": { 
+    "binding": "ASSETS", 
+    "directory": "web/dist" 
+  },
+  "d1_databases": [
+    { 
+      "binding": "DB", 
+      "database_name": "calendar", 
+      "database_id": "01905f11-7133-4de4-b22d-36657d1f1a3e" 
+    }
+  ]
+}
