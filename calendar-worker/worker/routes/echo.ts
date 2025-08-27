@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { DatabaseService } from '../services/database-service';
 import { createErrorResponse, createSuccessResponse } from '../middleware/error-handler';
 import { generateFollowupEvents, generateMermaidFlowchart } from '../services/ai-service';
+import { CALENDAR_ID } from '../utils/constants';
 
 export const echoRouter = new Hono();
 
@@ -16,6 +17,9 @@ echoRouter.post('/api/events/:id/echo', async (c) => {
     }
 
     const dbService = new DatabaseService(c.env.DB);
+    
+    // Ensure user and calendar exist
+    await dbService.seedDemoData(user_id, CALENDAR_ID);
     
     // Get the parent event
     const parentEvent = await dbService.getEventById(eventId);
@@ -52,6 +56,10 @@ echoRouter.post('/api/events/:id/echo/reset', async (c) => {
   try {
     const eventId = c.req.param('id');
     const { user_id } = await c.req.json();
+    
+    if (!eventId || !user_id) {
+      return createErrorResponse(c, 'Missing required parameters', 400);
+    }
     
     const dbService = new DatabaseService(c.env.DB);
     await dbService.resetEchoEvents(eventId);

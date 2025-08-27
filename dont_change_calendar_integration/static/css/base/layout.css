@@ -38,14 +38,19 @@ html, body {
 
 /* Header styles - REDUCED BY 30% MORE (60% total reduction) */
 header.calendar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 4px;              /* was 7px */
+  background: var(--white);
   padding: 0 0 4px 0;              /* was 5.6px */
   border-bottom: 1px solid var(--gray-200);
   flex-shrink: 0;
   position: relative;
+}
+
+.header-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 16px 20px 0 20px;
 }
 
 header.calendar-header h1 {

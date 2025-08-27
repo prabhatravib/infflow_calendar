@@ -7,6 +7,29 @@ import { validateDateRange } from '../utils/helpers';
 
 export const eventsRouter = new Hono();
 
+// GET /api/events/:id
+eventsRouter.get('/api/events/:id', async (c) => {
+  try {
+    const id = c.req.param('id');
+    
+    if (!id) {
+      return createErrorResponse(c, 'Event ID is required', 400);
+    }
+
+    const dbService = new DatabaseService(c.env.DB);
+    const event = await dbService.getEventById(id);
+    
+    if (!event) {
+      return createErrorResponse(c, 'Event not found', 404);
+    }
+
+    return createSuccessResponse(c, { event });
+  } catch (error) {
+    console.error('Error fetching event:', error);
+    return createErrorResponse(c, 'Failed to fetch event');
+  }
+});
+
 // GET /api/events
 eventsRouter.get('/api/events', async (c) => {
   try {

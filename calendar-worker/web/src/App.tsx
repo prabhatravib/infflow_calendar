@@ -3,19 +3,46 @@ import { Calendar } from './components/calendar/Calendar';
 import { EventModal } from './components/calendar/EventModal';
 import { Sidebar, EventFilters } from './components/calendar/Sidebar';
 import { LocationProvider } from './lib/contexts/LocationContext';
-import { useEventFiltering } from './lib/hooks/useEventFiltering';
 import { fetchEvents, createEvent, updateEvent, deleteEvent, seedDemoData } from './lib/api';
 import type { Event } from './lib/api';
+import { useEventFiltering } from './lib/hooks/useEventFiltering';
 
 const DEMO_CALENDAR_ID = '3c414e29-a3c3-4350-a334-5585cb22737a';
 
-function App() {
+export default function App() {
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
-  const [selectedHour, setSelectedHour] = useState<number | undefined>();
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedHour, setSelectedHour] = useState<number | undefined>(undefined);
+
+  // Check for Google Calendar import success
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('google_import') === 'success') {
+      // Update button state to show success
+      const btn = document.getElementById('import-google-calendar') as HTMLButtonElement;
+      const status = document.getElementById('google-calendar-status') as HTMLSpanElement;
+      const text = document.getElementById('google-calendar-btn-text') as HTMLSpanElement;
+      
+      if (btn && status && text) {
+        status.textContent = '✓';
+        status.style.color = 'green';
+        status.style.fontWeight = 'bold';
+        text.textContent = 'Google Calendar Connected';
+        btn.disabled = true;
+        btn.className = 'px-4 py-2 bg-gray-400 text-white text-sm font-medium rounded-md cursor-not-allowed flex items-center space-x-2';
+      }
+      
+      // Show success notification
+      const notif = document.createElement('div');
+      notif.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50';
+      notif.textContent = 'Google Calendar imported successfully!';
+      document.body.appendChild(notif);
+      setTimeout(() => notif.remove(), 3500);
+    }
+  }, []);
 
   // Ensure events is always an array
   const safeEvents = Array.isArray(events) ? events : [];
@@ -157,7 +184,17 @@ function App() {
           {/* Main Content Area */}
           <div className="flex-1 p-6">
             <div className="mb-6">
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">Calendar</h1>
+              <div className="flex items-center justify-between mb-2">
+                <h1 className="text-3xl font-bold text-gray-800">Calendar</h1>
+                <button
+                  id="import-google-calendar"
+                  className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors flex items-center space-x-2"
+                  onClick={() => window.location.href = '/oauth/google/start'}
+                >
+                  <span id="google-calendar-status" className="text-sm">📅</span>
+                  <span id="google-calendar-btn-text">Import Google Calendar</span>
+                </button>
+              </div>
               {!isLoading && (
                 <div className="text-sm text-gray-600">
                   Showing {filterStats.visible} of {filterStats.total} events
@@ -199,5 +236,3 @@ function App() {
     </LocationProvider>
   );
 }
-
-export default App;

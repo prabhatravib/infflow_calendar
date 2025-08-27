@@ -109,7 +109,7 @@ export function getFilteredEvents(events) {
     const type = (ev.type || '').toLowerCase();
     
     // Weather events are always shown
-    if (type === 'weather-warning' || eventType === 'weather') {
+    if (type === 'weather-warning') {
       return true;
     }
     

@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import mermaid from 'mermaid';
 import type { Event, CreateEventRequest, UpdateEventRequest } from '../../lib/api';
+
+// Declare global Mermaid from CDN
+declare global {
+  const mermaid: any;
+}
 
 interface EventModalProps {
   isOpen: boolean;
@@ -42,12 +46,8 @@ export function EventModal({
   const [hasEcho, setHasEcho] = useState(false);
 
   useEffect(() => {
-    // Initialize Mermaid
-    mermaid.initialize({
-      startOnLoad: true,
-      theme: 'default',
-      securityLevel: 'loose',
-    });
+    // Don't initialize Mermaid here - it's already initialized in index.html
+    // This prevents conflicts between CDN and npm versions
   }, []);
 
   useEffect(() => {
@@ -88,21 +88,118 @@ export function EventModal({
     
     // Reset echo state when modal opens
     setActiveTab('details');
-    setHasEcho(false);
+    // Don't reset hasEcho here - let the useEffect handle it
   }, [event, selectedDate, selectedHour]);
+
+  // Effect to check if event has existing echo data when modal opens
+  useEffect(() => {
+    if (event && event.id) {
+      // Fetch complete event data to get the flowchart field
+      const fetchCompleteEvent = async () => {
+        try {
+          const response = await fetch(`/api/events/${event.id}`);
+          if (response.ok) {
+            const data = await response.json();
+            const completeEvent = data.event;
+            
+            if (completeEvent.flowchart) {
+              setFlowchart(completeEvent.flowchart);
+              setHasEcho(true);
+              console.log('🔍 Event has existing flowchart:', completeEvent.flowchart.substring(0, 100) + '...');
+              console.log('🔍 Full event data:', completeEvent);
+            } else {
+              console.log('🔍 Event has NO flowchart:', completeEvent);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching complete event data:', error);
+        }
+      };
+      
+      fetchCompleteEvent();
+    }
+  }, [event]);
 
   // Effect to render Mermaid flowchart when it changes
   useEffect(() => {
+    console.log('🔍 Mermaid rendering effect triggered:', { 
+      flowchart: !!flowchart, 
+      flowchartLength: flowchart?.length || 0,
+      activeTab, 
+      hasEcho,
+      mermaidAvailable: typeof mermaid !== 'undefined'
+    });
+    
     if (flowchart && activeTab === 'echo') {
+      console.log('🔍 Attempting to render Mermaid flowchart...');
+      console.log('🔍 Flowchart content:', flowchart);
+      
       // Small delay to ensure DOM is ready
       setTimeout(() => {
         try {
-          mermaid.render('mermaid-flowchart', flowchart).then(({ svg }) => {
-            const mermaidDiv = document.querySelector('.mermaid');
-            if (mermaidDiv) {
-              mermaidDiv.innerHTML = svg;
+          const mermaidDiv = document.getElementById('mermaid-flowchart');
+          console.log('🔍 Found mermaid div:', !!mermaidDiv);
+          console.log('🔍 Mermaid div content:', mermaidDiv?.innerHTML);
+          
+          if (mermaidDiv) {
+            // Clear previous content
+            mermaidDiv.innerHTML = '';
+            console.log('🔍 Rendering flowchart with content:', flowchart.substring(0, 100) + '...');
+            
+            // Check if mermaid is available
+            if (typeof mermaid === 'undefined') {
+              console.error('🔍 Mermaid is not available!');
+              mermaidDiv.innerHTML = '<p class="text-red-500 text-center py-4">Mermaid library not loaded</p>';
+              return;
             }
-          });
+            
+            // Render the new flowchart
+            mermaid.render('mermaid-flowchart', flowchart).then(({ svg }: { svg: string }) => {
+              console.log('🔍 Mermaid render successful, SVG length:', svg.length);
+              console.log('🔍 SVG content preview:', svg.substring(0, 200) + '...');
+              
+              // Clean the Mermaid code (remove click handlers and class definitions)
+              const cleanedFlowchart = flowchart
+                .replace(/```mermaid[\s\S]*?%%/i, '%%')
+                .replace(/```$/m, '')
+                .replace(/click D[0-9]+ "javascript:[^"]*"/g, '')
+                .replace(/\n\s*class\s+D\d+\s+[^\n]*/g, '')
+                .trim();
+              
+              console.log('🔍 Cleaned flowchart:', cleanedFlowchart.substring(0, 100) + '...');
+              
+              // Render the new flowchart using the working approach from calendar_integration
+              mermaid.render('mermaid-flowchart-' + Date.now(), cleanedFlowchart).then(({ svg }: { svg: string }) => {
+                console.log('🔍 Mermaid render successful, SVG length:', svg.length);
+                console.log('🔍 SVG content preview:', svg.substring(0, 200) + '...');
+                
+                // Insert the SVG directly
+                mermaidDiv.innerHTML = svg;
+                
+                // Add some debugging
+                console.log('🔍 SVG inserted, div innerHTML length:', mermaidDiv.innerHTML.length);
+                console.log('🔍 SVG element found:', mermaidDiv.querySelector('svg'));
+                
+                // Ensure the SVG is visible and properly styled
+                const svgElement = mermaidDiv.querySelector('svg');
+                if (svgElement) {
+                  svgElement.style.maxWidth = '100%';
+                  svgElement.style.height = 'auto';
+                  svgElement.style.display = 'block';
+                  console.log('🔍 SVG styling applied');
+                }
+                
+              }).catch((error: any) => {
+                console.error('Error rendering Mermaid flowchart:', error);
+                mermaidDiv.innerHTML = '<p class="text-red-500 text-center py-4">Error rendering flowchart</p>';
+              });
+            }).catch((error: any) => {
+              console.error('Error rendering Mermaid flowchart:', error);
+              mermaidDiv.innerHTML = '<p class="text-red-500 text-center py-4">Error rendering flowchart</p>';
+            });
+          } else {
+            console.error('🔍 Mermaid div not found!');
+          }
         } catch (error) {
           console.error('Error rendering Mermaid flowchart:', error);
         }
@@ -461,7 +558,17 @@ export function EventModal({
             
             <div className="bg-gray-50 rounded-lg p-2 mb-2">
               {flowchart ? (
-                <div className="mermaid" id="mermaid-flowchart">
+                <div 
+                  className="mermaid" 
+                  id="mermaid-flowchart" 
+                  style={{ 
+                    minHeight: '200px', 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    alignItems: 'center',
+                    overflow: 'visible'
+                  }}
+                >
                   {/* Mermaid will render the flowchart here */}
                 </div>
               ) : (

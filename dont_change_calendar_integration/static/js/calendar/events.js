@@ -14,6 +14,16 @@ export async function loadEvents(calendar, userId) {
     console.log('Raw events from API:', events);
     console.log('Number of events:', events.length);
 
+    // Debug: Check for flowchart properties
+    events.forEach((event, index) => {
+      if (event.flowchart) {
+        console.log(`🔍 Event ${index + 1} "${event.title}" has flowchart:`, {
+          length: event.flowchart.length,
+          preview: event.flowchart.substring(0, 100) + '...'
+        });
+      }
+    });
+
     // Store events globally with normalized eventType
     allLoadedEvents = events.map(event => ({
       ...event,
@@ -39,7 +49,7 @@ export async function loadEvents(calendar, userId) {
       console.log('Filters not available, adding events directly');
       allLoadedEvents.forEach(event => {
         try {
-          calendar.addEvent({
+          const calendarEvent = {
             id: event.event_id || event.id,
             title: event.title,
             start: event.start_time || event.start,
@@ -55,7 +65,17 @@ export async function loadEvents(calendar, userId) {
               flowchart: event.flowchart,
               echo_event_ids: event.echo_event_ids
             }
-          });
+          };
+          
+          // Debug: Log flowchart data being added to calendar
+          if (event.flowchart) {
+            console.log(`🔍 Adding event "${event.title}" to calendar with flowchart:`, {
+              length: event.flowchart.length,
+              preview: event.flowchart.substring(0, 100) + '...'
+            });
+          }
+          
+          calendar.addEvent(calendarEvent);
         } catch (e) {
           console.warn('Failed to add event:', event.title, e);
         }

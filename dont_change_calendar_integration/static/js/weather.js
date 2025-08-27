@@ -134,7 +134,7 @@ function updateCalendarWithWeatherEvents() {
                 classNames: ['fc-event-weather'],
                 extendedProps: {
                     type: 'weather-warning',
-                    eventType: 'weather',
+                    // Removed eventType: 'weather' since Weather is not an event type
                     details: event.details || {},
                     location: currentLocation
                 }

@@ -1,5 +1,6 @@
 import { Event, CreateEventRequest, UpdateEventRequest } from '../types';
 import { generateUUID, getCurrentTimestamp } from '../utils/helpers';
+import { CALENDAR_ID } from '../utils/constants';
 
 export class DatabaseService {
   constructor(private db: any) {}

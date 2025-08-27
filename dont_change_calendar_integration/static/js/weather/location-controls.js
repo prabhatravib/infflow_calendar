@@ -42,7 +42,7 @@ async function updateWeatherLocation(locationInput, updateBtn) {
     if (window.calendar) {
       const existingEvents = window.calendar.getEvents();
       existingEvents.forEach(event => {
-        if (event.extendedProps?.type === 'weather-warning' || event.extendedProps?.eventType === 'weather') {
+        if (event.extendedProps?.type === 'weather-warning') {
           event.remove();
         }
       });
@@ -62,7 +62,7 @@ async function updateWeatherLocation(locationInput, updateBtn) {
             classNames: ['fc-event-weather'],
             extendedProps: {
               type: 'weather-warning',
-              eventType: 'weather',
+              // Removed eventType: 'weather' since Weather is not an event type
               details: event.details || {},
               location: newLocation
             }

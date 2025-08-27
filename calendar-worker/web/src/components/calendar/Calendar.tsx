@@ -40,40 +40,6 @@ export function Calendar({ events, onEventClick, onDateClick, onTimeSlotClick, c
     setCurrentDate(new Date());
   };
 
-  // Handle Google Calendar import
-  const handleGoogleCalendarImport = () => {
-    // Start OAuth flow by redirecting to the worker
-    // No need to pass user_id - it's handled by the environment
-    window.location.href = '/oauth/google/start';
-  };
-
-  // Check for Google Calendar import success
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('google_import') === 'success') {
-      // Update button state to show success
-      const btn = document.getElementById('import-google-calendar') as HTMLButtonElement;
-      const status = document.getElementById('google-calendar-status') as HTMLSpanElement;
-      const text = document.getElementById('google-calendar-btn-text') as HTMLSpanElement;
-      
-      if (btn && status && text) {
-        status.textContent = '✓';
-        status.style.color = 'green';
-        status.style.fontWeight = 'bold';
-        text.textContent = 'Google Calendar Connected';
-        btn.disabled = true;
-        btn.className = 'px-4 py-2 bg-gray-400 text-white text-sm font-medium rounded-md cursor-not-allowed flex items-center space-x-2';
-      }
-      
-      // Show success notification
-      const notif = document.createElement('div');
-      notif.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50';
-      notif.textContent = 'Google Calendar imported successfully!';
-      document.body.appendChild(notif);
-      setTimeout(() => notif.remove(), 3500);
-    }
-  }, []);
-
   const renderView = () => {
     switch (currentView) {
       case 'month':
@@ -192,23 +158,13 @@ export function Calendar({ events, onEventClick, onDateClick, onTimeSlotClick, c
             </button>
           </div>
 
-          {/* Right side - Today button and Google Calendar import */}
+          {/* Right side - Today button */}
           <div className="flex items-center space-x-3">
             <button
               onClick={handleToday}
               className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
             >
               Today
-            </button>
-            
-            {/* Google Calendar Import Button */}
-            <button
-              id="import-google-calendar"
-              className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors flex items-center space-x-2"
-              onClick={handleGoogleCalendarImport}
-            >
-              <span id="google-calendar-status" className="text-sm">📅</span>
-              <span id="google-calendar-btn-text">Import Google Calendar</span>
             </button>
           </div>
         </div>

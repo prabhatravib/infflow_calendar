@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
       defaultTimedEventDuration: '00:30:00',
       forceEventDuration: true,
       
-      slotMinTime: '00:00:00',
+      slotMinTime: '06:00:00',
       slotMaxTime: '24:00:00',
       // Start near the current time; additional centering logic will refine after render
       scrollTime: initialScrollTime,
@@ -172,6 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       eventClick(info) {
         console.log('Event clicked:', info.event.title);
+        console.log('🔍 Event extendedProps:', info.event.extendedProps);
         
         // Ignore clicks on weather events
         if (info.event.extendedProps.type === 'weather-warning') {
@@ -193,8 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const formatted = `${start.getFullYear()}-${pad(start.getMonth()+1)}-${pad(start.getDate())}T${pad(start.getHours())}:${pad(start.getMinutes())}`;
           const duration = Math.round((end - start) / (1000 * 60));
           
-          console.log('Opening event modal for existing event:', event.title);
-          window.ui.openEventModal({ 
+          const modalData = { 
             event_id: event.id,
             title: event.title,
             description: event.extendedProps.description || '',
@@ -206,7 +206,16 @@ document.addEventListener('DOMContentLoaded', () => {
             type: event.extendedProps.type,
             flowchart: event.extendedProps.flowchart,
             echo_event_ids: event.extendedProps.echo_event_ids
+          };
+          
+          console.log('🔍 Opening event modal with data:', modalData);
+          console.log('🔍 Flowchart data:', {
+            hasFlowchart: !!event.extendedProps.flowchart,
+            flowchartLength: event.extendedProps.flowchart ? event.extendedProps.flowchart.length : 0,
+            flowchartPreview: event.extendedProps.flowchart ? event.extendedProps.flowchart.substring(0, 100) + '...' : 'none'
           });
+          
+          window.ui.openEventModal(modalData);
         } catch (error) {
           console.error('Error in eventClick handler:', error);
           alert('Error opening event modal. Please try again.');

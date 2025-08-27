@@ -42,6 +42,13 @@
     flex-shrink: 0; /* Prevent shrinking */
   }
   
+  .header-top-row {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    text-align: center;
+    padding: 16px 16px 0 16px;
+  }
+  
   .calendar-header h1 {
     font-size: calc(var(--font-size-xl) * 0.7);
   }
@@ -111,6 +118,13 @@
   .user-profile {
     flex-direction: row;
     text-align: left;
+  }
+  
+  .header-top-row {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    text-align: center;
+    padding: 16px 16px 0 16px;
   }
   
   #calendar-filters {

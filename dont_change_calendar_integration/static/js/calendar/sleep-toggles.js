@@ -1,6 +1,6 @@
 // Sleep toggle state
-// Start expanded so hours are visible until user collapses
-let earlyCollapsed = false;
+// Start with early hours collapsed by default (6 AM onwards)
+let earlyCollapsed = true;
 let lateCollapsed = false;
 
 // Initialize row-based sleep toggles (12–6 AM and 10–12 PM)
@@ -138,10 +138,14 @@ function insertSleepToggles(calendar) {
     `;
     overlay.style.willChange = 'top, transform';
 
-    const earlyToggle = createToggleContainer('🌅 Hide Early Hours (12 AM - 6 AM)', 'early', () => {
-      // Use our tracked state instead of DOM classes so it works with slotMinTime
-      toggleTimeRangeVisibility('early', !earlyCollapsed);
-    });
+    const earlyToggle = createToggleContainer(
+      earlyCollapsed ? '🌅 Show Early Hours (12 AM - 6 AM)' : '🌅 Hide Early Hours (12 AM - 6 AM)', 
+      'early', 
+      () => {
+        // Use our tracked state instead of DOM classes so it works with slotMinTime
+        toggleTimeRangeVisibility('early', !earlyCollapsed);
+      }
+    );
     earlyToggle.style.pointerEvents = 'auto';
     earlyToggle.style.width = '100%';
     earlyToggle.style.height = `${overlayHeight}px`;

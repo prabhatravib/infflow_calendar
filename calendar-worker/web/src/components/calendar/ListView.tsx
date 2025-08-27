@@ -12,7 +12,7 @@ export function ListView({ events, onEventClick, className = '' }: ListViewProps
   const [showWork, setShowWork] = useState(true);
   const [showFun, setShowFun] = useState(true);
   const [showOther, setShowOther] = useState(true);
-  const [showWeather, setShowWeather] = useState(true);
+  // Removed showWeather state since Weather is not an event type
 
   // Ensure events is always an array
   const safeEvents = Array.isArray(events) ? events : [];
@@ -55,8 +55,9 @@ export function ListView({ events, onEventClick, className = '' }: ListViewProps
         return false;
       }
       
+      // Weather events are always shown as they are background information
       if (event.type === 'weather-warning') {
-        return showWeather;
+        return true;
       }
       
       const eventType = event.eventType || 'other';
@@ -71,7 +72,7 @@ export function ListView({ events, onEventClick, className = '' }: ListViewProps
           return true;
       }
     });
-  }, [sortedEvents, showWork, showFun, showOther, showWeather]);
+  }, [sortedEvents, showWork, showFun, showOther]);
 
   const getEventTypeColor = (event: Event) => {
     if (event.type === 'weather-warning') {
@@ -137,15 +138,7 @@ export function ListView({ events, onEventClick, className = '' }: ListViewProps
             <span className="text-sm text-gray-700">Other</span>
           </label>
           
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={showWeather}
-              onChange={(e) => setShowWeather(e.target.checked)}
-              className="rounded border-gray-300 text-red-600 focus:ring-red-500"
-            />
-            <span className="text-sm text-gray-700">Weather</span>
-          </label>
+          {/* Weather checkbox removed - Weather is not an event type but background information */}
         </div>
       </div>
 

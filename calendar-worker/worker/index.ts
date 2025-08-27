@@ -23,8 +23,8 @@ app.route('/', echoRouter);
 app.route('/', weatherRouter);
 app.route('/', icsRouter);
 app.route('/', seedRouter);
-app.route('/', googleOAuthRouter);
-app.route('/', googleCalendarRouter);
+app.route('/api', googleOAuthRouter);
+app.route('/api', googleCalendarRouter);
 
 // Static asset handler - must be last to catch all non-API routes
 app.get('*', async (c) => {
