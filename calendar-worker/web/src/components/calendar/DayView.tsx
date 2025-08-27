@@ -150,7 +150,7 @@ export function DayView({ date, events, onEventClick, onTimeSlotClick }: DayView
                 }`}
                 style={{ height: '60px', color: 'black', backgroundColor: 'white' }}
               >
-                {formatTime(hour, 'HH:mm')}
+                {formatTime(hour, 'h:mm a')}
               </div>
 
               {/* Events column - event content */}

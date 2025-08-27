@@ -118,7 +118,19 @@ export async function deleteEvent(eventId: string): Promise<void> {
     });
     
     if (!response.ok) {
-      throw new Error(`Failed to delete event: ${response.statusText}`);
+      const errorText = response.statusText || `HTTP ${response.status}`;
+      throw new Error(`Failed to delete event: ${errorText}`);
+    }
+    
+    // Try to parse the response to see if we got a success message
+    try {
+      const data = await response.json();
+      if (data.message && data.message.includes('deleted successfully')) {
+        console.log('Event deleted successfully:', data.message);
+      }
+    } catch (parseError) {
+      // If we can't parse the response, that's okay - the status code is what matters
+      console.log('Delete response received (status OK)');
     }
   } catch (error) {
     console.error('Error deleting event:', error);

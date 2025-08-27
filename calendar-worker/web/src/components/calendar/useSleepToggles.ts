@@ -6,8 +6,8 @@ export interface TogglePositions {
 }
 
 export function useSleepToggles() {
-  const [lateHoursCollapsed, setLateHoursCollapsed] = useState(false);
-  const [earlyHoursCollapsed, setEarlyHoursCollapsed] = useState(false);
+  const [lateHoursCollapsed, setLateHoursCollapsed] = useState(true);
+  const [earlyHoursCollapsed, setEarlyHoursCollapsed] = useState(true);
 
   // Filter hours based on sleep toggle states
   const filterHoursByToggles = useCallback((allHours: Date[]) => {
