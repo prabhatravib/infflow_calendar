@@ -88,38 +88,52 @@ export default function App() {
   };
 
   const handleEventClick = (event: Event) => {
+    console.log('🔍 Event click - setting selectedEvent:', event);
     setSelectedEvent(event);
     setIsModalOpen(true);
   };
 
   const handleDateClick = (date: Date) => {
-    setSelectedDate(date);
+    console.log('🔍 Date click - clearing selectedEvent, setting date:', date);
     setSelectedEvent(null);
+    setSelectedDate(date);
+    setSelectedHour(undefined);
     setIsModalOpen(true);
   };
 
   const handleTimeSlotClick = (date: Date, hour: number) => {
+    console.log('🔍 Time slot click - clearing selectedEvent, setting date/hour:', date, hour);
+    setSelectedEvent(null);
     setSelectedDate(date);
     setSelectedHour(hour);
-    setSelectedEvent(null);
     setIsModalOpen(true);
   };
 
   const handleSaveEvent = async (eventData: any) => {
     try {
+      let savedEvent: Event;
       if (selectedEvent) {
         // Update existing event
-        const updatedEvent = await updateEvent(selectedEvent.id, eventData);
-        setEvents(prev => prev.map(e => e.id === updatedEvent.id ? updatedEvent : e));
+        savedEvent = await updateEvent(selectedEvent.id, eventData);
+        setEvents(prev => prev.map(e => e.id === savedEvent.id ? savedEvent : e));
       } else {
         // Create new event
-        const newEvent = await createEvent({
+        savedEvent = await createEvent({
           ...eventData,
           calendar_id: DEMO_CALENDAR_ID
         });
-        setEvents(prev => [...prev, newEvent]);
+        setEvents(prev => [...prev, savedEvent]);
       }
       
+      // If this is a new event, keep the modal open and set it as the selected event
+      // so the user can generate echo events
+      if (!selectedEvent) {
+        setSelectedEvent(savedEvent);
+        // Don't close modal yet - let user generate echo events if they want
+        return;
+      }
+      
+      // For existing events, close the modal
       setIsModalOpen(false);
       setSelectedEvent(null);
       setSelectedDate(undefined);
@@ -231,6 +245,7 @@ export default function App() {
         <EventModal
           isOpen={isModalOpen}
           onClose={() => {
+            console.log('🔍 Modal closing - clearing all state');
             setIsModalOpen(false);
             setSelectedEvent(null);
             setSelectedDate(undefined);

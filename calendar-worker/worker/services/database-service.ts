@@ -203,8 +203,8 @@ export class DatabaseService {
       await this.db.prepare('INSERT INTO users (id, email) VALUES (?, ?)').bind(userId, `${userId}@example.com`).run();
     }
 
-    // Check if calendar exists
-    let calendar = await this.db.prepare('SELECT * FROM calendars WHERE user_id = ?').bind(userId).first();
+    // Check if calendar with this specific ID exists
+    let calendar = await this.db.prepare('SELECT * FROM calendars WHERE id = ?').bind(calendarId).first();
     
     if (!calendar) {
       await this.db.prepare('INSERT INTO calendars (id, user_id, name) VALUES (?, ?, ?)').bind(calendarId, userId, 'My Calendar').run();
