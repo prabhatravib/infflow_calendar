@@ -1,0 +1,30 @@
+{
+  "name": "calendar-worker",
+  "version": "1.0.0",
+  "description": "Minimal calendar app built with Cloudflare Workers",
+  "main": "worker/index.ts",
+  "scripts": {
+    "dev": "concurrently \"npm --prefix web run dev\" \"wrangler dev\"",
+    "build": "npm --prefix web run build",
+    "deploy": "npm --prefix web run build && wrangler deploy",
+    "db:create": "wrangler d1 create calendar",
+    "db:migrate": "wrangler d1 execute calendar --file=./schema.sql",
+    "db:seed": "wrangler dev --local --persist"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "wrangler": "^4.32.0"
+  },
+  "dependencies": {
+    "hono": "^3.12.8"
+  },
+  "keywords": [
+    "calendar",
+    "cloudflare-workers",
+    "d1",
+    "react",
+    "typescript"
+  ],
+  "author": "Calendar Worker",
+  "license": "MIT"
+}

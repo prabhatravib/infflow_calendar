@@ -1,0 +1,193 @@
+/* Import sleep toggles styles */
+@import './components/calendar/SleepToggles.css';
+/* Import minute indicator styles */
+@import './components/calendar/MinuteIndicator.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Critical CSS to prevent FOUC and empty space */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Custom styles for the calendar application */
+.calendar {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.calendar-month-view,
+.calendar-week-view,
+.calendar-day-view {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.bg-blue-25 {
+  background-color: #f8fafc;
+}
+
+.transition-colors {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+.calendar-month-view .grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0px;
+  background-color: #f3f4f6;
+}
+
+.calendar-week-view .grid {
+  display: grid;
+  grid-template-columns: 80px repeat(7, 1fr);
+  gap: 0px;
+  background-color: #f3f4f6;
+}
+
+.calendar-day-view .grid {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 0px;
+  background-color: white;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .calendar-month-view .grid {
+    grid-template-columns: repeat(7, 1fr);
+  }
+  
+  .calendar-week-view .grid {
+    grid-template-columns: 80px repeat(7, 1fr);
+  }
+  
+  .calendar-day-view .grid {
+    grid-template-columns: 60px 1fr;
+  }
+}
+
+.calendar-month-view .grid > div {
+  background: white;
+  min-height: 120px;
+  padding: 8px;
+}
+
+.calendar-week-view .grid-cols-8 > div {
+  background: white;
+  min-height: 60px;
+  padding: 4px;
+}
+
+.calendar-day-view .border-b:last-child {
+  border-bottom: none;
+}
+
+/* Day view time slot styling - unified borders for perfect alignment */
+.calendar-day-view .grid > div {
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  position: relative;
+}
+
+.calendar-day-view .grid > div:last-child {
+  border-bottom: none;
+}
+
+/* Remove duplicate border styles and pseudo-elements */
+.calendar-day-view .border-r > div {
+  background: white;
+}
+
+/* Additional day view styling for better visibility */
+.calendar-day-view .grid {
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  overflow: visible;
+}
+
+.calendar-month-view,
+.calendar-week-view,
+.calendar-day-view {
+  overflow: hidden;
+}
+
+/* Sidebar styles */
+.sidebar {
+  min-height: 100vh;
+  background: white;
+  border-right: 1px solid #f3f4f6;
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Responsive sidebar */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 280px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    min-height: auto;
+    border-right: none;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  
+  .flex {
+    flex-direction: column;
+  }
+}
+
+/* Event type filter styles */
+.event-filters input[type="checkbox"]:checked {
+  background-color: currentColor;
+  border-color: currentColor;
+}
+
+.event-filters input[type="checkbox"]:checked + span {
+  font-weight: 500;
+}
+
+/* Location section styles */
+.location-section .bg-yellow-100 {
+  background-color: #fef3c7;
+}
+
+.location-section .border-yellow-300 {
+  border-color: #f59e0b;
+}
+
+.location-section .text-yellow-500 {
+  color: #d97706;
+}
+
+.location-section .hover\:bg-yellow-600:hover {
+  background-color: #d97706;
+}
