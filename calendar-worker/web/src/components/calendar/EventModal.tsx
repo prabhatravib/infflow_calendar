@@ -42,6 +42,21 @@ export function EventModal({
   const [hasEcho, setHasEcho] = useState(false);
   const [isGeneratingEcho, setIsGeneratingEcho] = useState(false);
 
+  // Function to reset form to default values
+  const resetForm = () => {
+    setTitle('');
+    setDescription('');
+    setStartDate('');
+    setStartTime('');
+    setEndDate('');
+    setEndTime('');
+    setTimezone('America/New_York');
+    setEventType('other');
+    setActiveTab('details');
+    setHasEcho(false);
+    setIsGeneratingEcho(false);
+  };
+
   useEffect(() => {
     if (event) {
       // Update local event when prop changes
@@ -66,7 +81,9 @@ export function EventModal({
         setHasEcho(true);
       }
     } else if (selectedDate) {
-      // Creating new event
+      // Creating new event - reset form first, then set date/time
+      resetForm();
+      
       const date = selectedDate.toISOString().split('T')[0];
       setStartDate(date);
       setEndDate(date);
@@ -78,12 +95,25 @@ export function EventModal({
         setStartTime('09:00');
         setEndTime('10:00');
       }
+    } else {
+      // Modal opened without event or date - reset to defaults
+      resetForm();
     }
-    
-    // Reset echo state when modal opens
-    setActiveTab('details');
-    setHasEcho(false);
   }, [event, selectedDate, selectedHour]);
+
+  // Cleanup effect to reset form when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      // Reset form when modal closes
+      resetForm();
+    }
+  }, [isOpen]);
+
+  // Custom close handler that ensures form is reset
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,7 +145,7 @@ export function EventModal({
       };
 
       await onSave(eventData);
-      onClose();
+      handleClose();
     } catch (error) {
       console.error('Error saving event:', error);
       alert('Failed to save event');
@@ -133,7 +163,7 @@ export function EventModal({
     
     try {
       await onDelete(localEvent.id);
-      onClose();
+      handleClose();
     } catch (error) {
       console.error('Error deleting event:', error);
       alert('Failed to delete event');
@@ -254,7 +284,7 @@ export function EventModal({
               </h2>
               <button
                 type="button"
-                onClick={onClose}
+                onClick={handleClose}
                 className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
                 aria-label="Close modal"
               >
@@ -448,7 +478,7 @@ export function EventModal({
                 <div className="flex space-x-2">
                   <button
                     type="button"
-                    onClick={onClose}
+                    onClick={handleClose}
                     disabled={isLoading}
                     className="px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
                   >
