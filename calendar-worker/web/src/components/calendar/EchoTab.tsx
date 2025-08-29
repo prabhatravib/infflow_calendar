@@ -69,12 +69,17 @@ export function EchoTab({ event, onBackToDetails }: EchoTabProps) {
 
   // Initialize echo state when event changes
   useEffect(() => {
+    console.log('EchoTab: Event changed:', event);
+    console.log('EchoTab: Event flowchart:', event?.flowchart);
+    
     if (event?.flowchart) {
       setFlowchart(event.flowchart);
       setHasEcho(true);
+      console.log('EchoTab: Set flowchart and hasEcho to true');
     } else {
       setFlowchart('');
       setHasEcho(false);
+      console.log('EchoTab: Cleared flowchart and hasEcho to false');
     }
   }, [event]);
 

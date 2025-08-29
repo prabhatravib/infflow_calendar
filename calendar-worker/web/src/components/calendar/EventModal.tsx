@@ -26,6 +26,7 @@ export function EventModal({
   onDelete,
   onEventsRefresh
 }: EventModalProps) {
+  const [localEvent, setLocalEvent] = useState<Event | null>(event || null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -43,6 +44,9 @@ export function EventModal({
 
   useEffect(() => {
     if (event) {
+      // Update local event when prop changes
+      setLocalEvent(event);
+      
       // Editing existing event
       setTitle(event.title);
       setDescription(event.description || '');
@@ -107,7 +111,7 @@ export function EventModal({
         end: endDateTime.toISOString(),
         tz: timezone,
         eventType: eventType,
-        ...(event ? {} : { calendar_id: calendarId })
+        ...(localEvent ? {} : { calendar_id: calendarId })
       };
 
       await onSave(eventData);
@@ -121,14 +125,14 @@ export function EventModal({
   };
 
   const handleDelete = async () => {
-    if (!event || !onDelete) return;
+    if (!localEvent || !onDelete) return;
     
     if (!confirm('Are you sure you want to delete this event?')) return;
     
     setIsLoading(true);
     
     try {
-      await onDelete(event.id);
+      await onDelete(localEvent.id);
       onClose();
     } catch (error) {
       console.error('Error deleting event:', error);
@@ -139,17 +143,17 @@ export function EventModal({
   };
 
   const handleEchoGeneration = async () => {
-    if (!event?.id) return;
+    if (!localEvent?.id) return;
     
     setIsGeneratingEcho(true);
     try {
-      console.log('Generating echo for event:', event.id);
+      console.log('Generating echo for event:', localEvent.id);
       
       // Add timeout to prevent hanging requests
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
       
-      const response = await fetch(`/api/events/${event.id}/echo`, {
+      const response = await fetch(`/api/events/${localEvent.id}/echo`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: 'demo-user' }),
@@ -162,6 +166,7 @@ export function EventModal({
       
       if (response.ok) {
         const data = await response.json();
+        console.log('Echo API response data:', data);
         
         // Validate the response data
         if (!data || typeof data.mermaid !== 'string') {
@@ -178,17 +183,24 @@ export function EventModal({
             await onEventsRefresh();
             
             // Also refresh the current event data to get the updated flowchart
-            if (event?.id) {
+            if (localEvent?.id) {
               try {
-                const response = await fetch(`/api/events/${event.id}`);
+                const response = await fetch(`/api/events/${localEvent.id}`);
                 if (response.ok) {
-                  const updatedEvent = await response.json();
-                  console.log('Updated event data:', updatedEvent);
+                  const responseData = await response.json();
+                  console.log('Updated event data:', responseData);
+                  
+                  // Extract the event from the response
+                  const updatedEvent = responseData.event;
                   
                   // Update the local event state with the new flowchart
-                  if (updatedEvent.flowchart) {
+                  if (updatedEvent && updatedEvent.flowchart) {
+                    console.log('Setting localEvent to:', updatedEvent);
+                    setLocalEvent(updatedEvent); // Update the local event state with new data
                     setHasEcho(true);
                     console.log('Event data refreshed with new flowchart');
+                  } else {
+                    console.log('No flowchart found in updated event:', updatedEvent);
                   }
                 }
               } catch (fetchError) {
@@ -411,7 +423,7 @@ export function EventModal({
               {/* Actions */}
               <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
                 <div className="flex space-x-2">
-                  {event && onDelete && (
+                  {localEvent && onDelete && (
                     <button
                       type="button"
                       onClick={handleDelete}
@@ -421,7 +433,7 @@ export function EventModal({
                       Delete
                     </button>
                   )}
-                  {event && (
+                  {localEvent && (
                     <button
                       type="button"
                       onClick={handleEchoGeneration}
@@ -456,7 +468,7 @@ export function EventModal({
           
           {activeTab === 'echo' && (
             <EchoTab 
-              event={event || null} 
+              event={localEvent || null} 
               onBackToDetails={() => setActiveTab('details')}
             />
           )}
