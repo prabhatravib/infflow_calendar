@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Calendar } from './components/calendar/Calendar';
 import { EventModal } from './components/calendar/EventModal';
 import { Sidebar, EventFilters } from './components/calendar/Sidebar';
@@ -26,6 +26,8 @@ function App() {
   // Use the event filtering hook
   const { filteredEvents, updateFilter, getFilterStats } = useEventFiltering(safeEvents);
 
+
+
   useEffect(() => {
     // Initialize with default values and load events
     const initialView: View = 'week';
@@ -52,7 +54,7 @@ function App() {
   }, [currentView, currentDate]);
 
   // Load events based on current view and date
-  const loadEvents = async () => {
+  const loadEvents = useCallback(async () => {
     try {
       setIsLoading(true);
       
@@ -75,7 +77,7 @@ function App() {
           break;
           
         case 'month':
-          // Get the month containing the current date
+          // Get the month containing the specified date
           startDate = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
           endDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 0);
           break;
@@ -106,12 +108,12 @@ function App() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentView, currentDate]);
 
 
 
   // Function to load events for a specific date (avoids state update timing issues)
-  const loadEventsForDate = async (date: Date) => {
+  const loadEventsForDate = useCallback(async (date: Date) => {
     try {
       setIsLoading(true);
       
@@ -168,7 +170,47 @@ function App() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentView]);
+
+  // Global navigation function for Echo flowchart clicks
+  const gotoDateWithTitle = useCallback((dateStr: string, eventTitle?: string) => {
+    try {
+      // Parse the date string
+      const targetDate = new Date(dateStr);
+      
+      if (isNaN(targetDate.getTime())) {
+        console.error('Invalid date string:', dateStr);
+        return;
+      }
+
+      console.log('Navigating to date:', targetDate, 'for event:', eventTitle);
+      
+      // Close the modal first
+      setIsModalOpen(false);
+      setSelectedEvent(null);
+      setSelectedDate(undefined);
+      setSelectedHour(undefined);
+      
+      // Navigate to the target date
+      setCurrentDate(targetDate);
+      
+      // Load events for the new date
+      loadEventsForDate(targetDate);
+      
+    } catch (error) {
+      console.error('Error navigating to date:', error);
+    }
+  }, [loadEventsForDate]);
+
+  // Expose the navigation function globally for Echo flowchart clicks
+  useEffect(() => {
+    (window as any).gotoDateWithTitle = gotoDateWithTitle;
+    
+    // Cleanup function to remove the global function
+    return () => {
+      delete (window as any).gotoDateWithTitle;
+    };
+  }, [gotoDateWithTitle]);
 
   const handleEventClick = (event: Event) => {
     setSelectedEvent(event);
