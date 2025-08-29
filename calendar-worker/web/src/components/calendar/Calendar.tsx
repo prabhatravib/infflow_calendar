@@ -8,6 +8,8 @@ import { getNavigationDates, type View } from '../../lib/date';
 
 interface CalendarProps {
   events: Event[];
+  currentView: View;
+  currentDate: Date;
   onEventClick?: (event: Event) => void;
   onDateClick?: (date: Date) => void;
   onTimeSlotClick?: (date: Date, hour: number) => void;
@@ -18,6 +20,8 @@ interface CalendarProps {
 
 export function Calendar({ 
   events, 
+  currentView,
+  currentDate,
   onEventClick, 
   onDateClick, 
   onTimeSlotClick, 
@@ -25,8 +29,7 @@ export function Calendar({
   onDateChange,
   className = '' 
 }: CalendarProps) {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [currentView, setCurrentView] = useState<View>('week');
+  // Remove internal state - use props from parent instead
   const [allEvents, setAllEvents] = useState<Event[]>([]);
 
   // Ensure events is always an array
@@ -38,7 +41,7 @@ export function Calendar({
   }, [safeEvents]);
 
   const handleViewChange = (view: View) => {
-    setCurrentView(view);
+    // Don't set internal state - let parent handle it
     if (onViewChange) {
       onViewChange(view);
     }
@@ -47,7 +50,7 @@ export function Calendar({
   const handleDateChange = (direction: 'prev' | 'next') => {
     const { prev, next } = getNavigationDates(currentDate, currentView);
     const newDate = direction === 'prev' ? prev : next;
-    setCurrentDate(newDate);
+    
     if (onDateChange) {
       onDateChange(newDate);
     }
@@ -55,7 +58,6 @@ export function Calendar({
 
   const handleToday = () => {
     const today = new Date();
-    setCurrentDate(today);
     if (onDateChange) {
       onDateChange(today);
     }
@@ -98,7 +100,14 @@ export function Calendar({
           />
         );
       default:
-        return null;
+        return (
+          <WeekView
+            date={currentDate}
+            events={allEvents}
+            onEventClick={onEventClick}
+            onTimeSlotClick={onTimeSlotClick}
+          />
+        );
     }
   };
 

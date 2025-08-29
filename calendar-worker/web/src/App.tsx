@@ -34,7 +34,7 @@ function App() {
     setCurrentDate(initialDate);
     
     // Load events with initial parameters
-    loadEvents(initialView, initialDate);
+    loadEvents();
   }, []);
 
   // Handle view/date changes after initial load
@@ -46,18 +46,59 @@ function App() {
         currentDate.toDateString() === new Date().toDateString();
       
       if (!isInitialLoad) {
-        loadEvents(currentView, currentDate);
+        loadEvents();
       }
     }
   }, [currentView, currentDate]);
 
   // Load events based on current view and date
-  const loadEvents = async (view: View = 'week', date: Date = new Date()) => {
+  const loadEvents = async () => {
     try {
       setIsLoading(true);
       
-      // Don't load any events - just set empty array
-      setEvents([]);
+      // Use currentDate instead of always using current time
+      const baseDate = currentDate || new Date();
+      let startDate: Date;
+      let endDate: Date;
+      
+      // Calculate date range based on current view
+      switch (currentView) {
+        case 'week':
+          // Get the week containing the current date
+          const weekStart = new Date(baseDate);
+          weekStart.setDate(baseDate.getDate() - baseDate.getDay()); // Start of week (Sunday)
+          const weekEnd = new Date(weekStart);
+          weekEnd.setDate(weekStart.getDate() + 6); // End of week (Saturday)
+          
+          startDate = weekStart;
+          endDate = weekEnd;
+          break;
+          
+        case 'month':
+          // Get the month containing the current date
+          startDate = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
+          endDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 0);
+          break;
+          
+        case 'day':
+          // Get the day
+          startDate = new Date(baseDate);
+          endDate = new Date(baseDate);
+          break;
+          
+        default:
+          // Default to current week
+          startDate = new Date(baseDate);
+          endDate = new Date(baseDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+      }
+      
+      const fetchedEvents = await fetchEvents(
+        DEMO_CALENDAR_ID,
+        startDate.toISOString(),
+        endDate.toISOString()
+      );
+      
+      setEvents(fetchedEvents);
       
     } catch (error) {
       console.error('Error loading events:', error);
@@ -67,9 +108,66 @@ function App() {
     }
   };
 
-  // Function to reload events when calendar view/date changes
-  const reloadEvents = (view: View, date: Date) => {
-    loadEvents(view, date);
+
+
+  // Function to load events for a specific date (avoids state update timing issues)
+  const loadEventsForDate = async (date: Date) => {
+    try {
+      setIsLoading(true);
+      
+      let startDate: Date;
+      let endDate: Date;
+      
+      // Calculate date range based on current view
+      switch (currentView) {
+        case 'week':
+          // Get the week containing the specified date
+          const weekStart = new Date(date);
+          weekStart.setDate(date.getDate() - date.getDay()); // Start of week (Sunday)
+          const weekEnd = new Date(weekStart);
+          weekEnd.setDate(weekStart.getDate() + 6); // End of week (Saturday)
+          
+          startDate = weekStart;
+          endDate = weekEnd;
+          break;
+          
+        case 'month':
+          // Get the month containing the specified date
+          startDate = new Date(date.getFullYear(), date.getMonth(), 1);
+          endDate = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+          break;
+          
+        case 'day':
+          // Get the specified day
+          startDate = new Date(date);
+          endDate = new Date(date);
+          break;
+          
+        default:
+          // Default to week view
+          const defaultWeekStart = new Date(date);
+          defaultWeekStart.setDate(date.getDate() - date.getDay());
+          const defaultWeekEnd = new Date(defaultWeekStart);
+          defaultWeekEnd.setDate(defaultWeekStart.getDate() + 6);
+          
+          startDate = defaultWeekStart;
+          endDate = defaultWeekEnd;
+      }
+      
+      const fetchedEvents = await fetchEvents(
+        DEMO_CALENDAR_ID,
+        startDate.toISOString(),
+        endDate.toISOString()
+      );
+      
+      setEvents(fetchedEvents);
+      
+    } catch (error) {
+      console.error('Error loading events for date:', error);
+      setEvents([]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleEventClick = (event: Event) => {
@@ -105,8 +203,8 @@ function App() {
         setEvents(prev => [...prev, newEvent]);
       }
       
-      // Reload events to ensure all events are up to date
-      await loadEvents(currentView, currentDate);
+      // Don't call loadEvents() as it clears the events array
+      // The events are already updated above
       
       setIsModalOpen(false);
       setSelectedEvent(null);
@@ -121,6 +219,7 @@ function App() {
   const handleDeleteEvent = async (eventId: string) => {
     try {
       await deleteEvent(eventId);
+      // Remove the deleted event from local state
       setEvents(prev => prev.filter(e => e.id !== eventId));
       setIsModalOpen(false);
       setSelectedEvent(null);
@@ -186,16 +285,20 @@ function App() {
             ) : (
               <Calendar
                 events={filteredEvents}
+                currentView={currentView}
+                currentDate={currentDate}
                 onEventClick={handleEventClick}
                 onDateClick={handleDateClick}
                 onTimeSlotClick={handleTimeSlotClick}
                 onViewChange={(view) => {
                   setCurrentView(view);
-                  reloadEvents(view, currentDate);
+                  // Pass the current date to avoid state update timing issues
+                  loadEventsForDate(currentDate);
                 }}
                 onDateChange={(date) => {
                   setCurrentDate(date);
-                  reloadEvents(currentView, date);
+                  // Pass the new date directly to avoid state update timing issues
+                  loadEventsForDate(date);
                 }}
               />
             )}

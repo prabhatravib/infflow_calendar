@@ -192,6 +192,10 @@ export class DatabaseService {
     return (result.results as (Event & { calendar_name: string })[]) || [];
   }
 
+  async clearAllEvents(calendarId: string): Promise<void> {
+    await this.db.prepare('DELETE FROM events WHERE calendar_id = ?').bind(calendarId).run();
+  }
+
   async seedDemoData(userId: string, calendarId: string): Promise<void> {
     // Check if user exists
     let user = await this.db.prepare('SELECT * FROM users WHERE id = ?').bind(userId).first();
@@ -207,12 +211,13 @@ export class DatabaseService {
       await this.db.prepare('INSERT INTO calendars (id, user_id, name) VALUES (?, ?, ?)').bind(calendarId, userId, 'My Calendar').run();
     }
 
+    // DISABLED: Demo events creation to prevent random events from appearing
     // Check if events exist
-    const eventCount = await this.db.prepare('SELECT COUNT(*) as count FROM events WHERE calendar_id = ?').bind(calendarId).first();
+    // const eventCount = await this.db.prepare('SELECT COUNT(*) as count FROM events WHERE calendar_id = ?').bind(calendarId).first();
     
-    if (eventCount && (eventCount as { count: number }).count === 0) {
-      await this.createDemoEvents(calendarId);
-    }
+    // if (eventCount && (eventCount as { count: number }).count === 0) {
+    //   await this.createDemoEvents(calendarId);
+    // }
   }
 
   private async createDemoEvents(calendarId: string): Promise<void> {
