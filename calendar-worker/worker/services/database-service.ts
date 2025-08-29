@@ -102,8 +102,18 @@ export class DatabaseService {
   }
 
   async deleteEvent(id: string): Promise<boolean> {
-    const result = await this.db.prepare('DELETE FROM events WHERE id = ?').bind(id).run();
-    return result.changes > 0;
+    try {
+      const result = await this.db.prepare('DELETE FROM events WHERE id = ?').bind(id).run();
+      
+      // D1 returns changes in result.meta.changes, not result.changes
+      const deletedCount = (result as any)?.meta?.changes ?? 0;
+      
+      // Return true if at least one row was deleted
+      return deletedCount > 0;
+    } catch (error) {
+      console.error(`Error deleting event ${id}:`, error);
+      return false;
+    }
   }
 
   async getEventById(id: string): Promise<Event | null> {
