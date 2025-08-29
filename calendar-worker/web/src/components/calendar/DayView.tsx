@@ -21,7 +21,6 @@ export function DayView({ date, events, onEventClick, onTimeSlotClick }: DayView
   const {
     earlyHoursCollapsed,
     lateHoursCollapsed,
-    filterHoursByToggles,
     calculateTogglePositions,
     handleEarlyHoursToggle,
     handleLateHoursToggle
@@ -74,12 +73,14 @@ export function DayView({ date, events, onEventClick, onTimeSlotClick }: DayView
   // Filter hours based on sleep toggle states (for event rows only)
   const hours = useMemo(() => {
     try {
-      return filterHoursByToggles(timelineHours);
+      // TEMPORARILY DISABLE FILTERING TO DEBUG THE ISSUE
+      // return filterHoursByToggles(timelineHours);
+      return timelineHours; // Show all hours for now
     } catch (error) {
       console.error('Error filtering hours array:', error);
       return timelineHours; // Fallback to showing all hours
     }
-  }, [filterHoursByToggles, timelineHours]);
+  }, [timelineHours]);
 
   const getEventsForHour = (hour: number) => {
     if (!Array.isArray(allEvents)) {
@@ -188,7 +189,7 @@ export function DayView({ date, events, onEventClick, onTimeSlotClick }: DayView
       })()}
 
       {/* Time grid - restructured for perfect alignment */}
-      <div className="grid" style={{ gridTemplateColumns: '80px 1fr' }}>
+      <div className="grid">
         {/* Minute Indicator */}
         <MinuteIndicator />
         
