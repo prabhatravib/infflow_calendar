@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useWeatherAwareMinuteIndicator } from '../../lib/hooks/useWeatherAwareMinuteIndicator';
 import { useLocation } from '../../lib/contexts/LocationContext';
 
@@ -8,7 +8,10 @@ interface CurrentTimeLineProps {
 
 export function CurrentTimeLine({ isWeekView = false }: CurrentTimeLineProps) {
   const [position, setPosition] = useState({ top: 0, left: 80 });
+  const [isVisible, setIsVisible] = useState(false);
   const lineRef = useRef<HTMLDivElement>(null);
+  const retryCountRef = useRef(0);
+  const MAX_RETRIES = 10;
 
   // Get location from context
   const { location } = useLocation();
@@ -16,120 +19,179 @@ export function CurrentTimeLine({ isWeekView = false }: CurrentTimeLineProps) {
   // Use weather-aware hook for indicator colors
   const { indicatorColor } = useWeatherAwareMinuteIndicator(location);
 
-  useEffect(() => {
-    const updatePosition = () => {
-      const now = new Date();
-      const currentHour = now.getHours();
-      const currentMinute = now.getMinutes();
-      
-      // For week view, use the EXACT same vertical positioning logic as MinuteIndicator
-      let topPosition = 0;
-      let leftPosition = 80; // Start after time column
-      
-      if (isWeekView) {
-        const calendarContainer = document.querySelector('.calendar-week-view');
-        if (!calendarContainer) {
-          return;
+  const updatePosition = useCallback(() => {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    
+    let topPosition = 0;
+    let leftPosition = 80; // Start after time column
+    
+    if (isWeekView) {
+      const calendarContainer = document.querySelector('.calendar-week-view');
+      if (!calendarContainer) {
+        // Retry if container not found
+        if (retryCountRef.current < MAX_RETRIES) {
+          retryCountRef.current++;
+          setTimeout(updatePosition, 100);
         }
-
-        const calendarGrid = calendarContainer.querySelector('.grid');
-        if (!calendarGrid) {
-          return;
-        }
-
-        // Find time labels using the same selector as MinuteIndicator
-        let timeLabels = calendarGrid.querySelectorAll('div[class*="text-sm text-gray-600"]');
-        if (timeLabels.length === 0) {
-          // Try alternative selectors
-          const altLabels = calendarGrid.querySelectorAll('div.text-sm, div[style*="height: 60px"]');
-          if (altLabels.length === 0) {
-            return;
-          }
-          timeLabels = altLabels;
-        }
-
-        // Find the current hour label (same logic as MinuteIndicator)
-        let currentHourLabel = null;
-        for (const label of timeLabels) {
-          const text = label.textContent?.trim();
-          // Look for time format like "14:00", "2:00", "2:00 PM", etc.
-          if (text && (
-            text === `${currentHour.toString().padStart(2, '0')}:00` || 
-            text === `${currentHour}:00` ||
-            text.includes(`${currentHour}:00`) ||
-            text.includes(`${currentHour.toString().padStart(2, '0')}:00`) ||
-            text.includes(`${currentHour}:00 AM`) ||
-            text.includes(`${currentHour}:00 PM`)
-          )) {
-            currentHourLabel = label;
-            break;
-          }
-        }
-
-        if (!currentHourLabel) {
-          return;
-        }
-
-        // Calculate top position using EXACT same logic as MinuteIndicator
-        const calendarRect = calendarGrid.getBoundingClientRect();
-        const labelRect = currentHourLabel.getBoundingClientRect();
-        
-        const hourHeight = 60; // Each hour is 60px
-        const minuteOffset = (currentMinute / 60) * hourHeight;
-        topPosition = (labelRect.top - calendarRect.top) + minuteOffset;
-        
-        // Get the current day of week (0 = Sunday, 6 = Saturday)
-        const dayOfWeek = now.getDay();
-        
-        // Convert to Monday-first calendar (Monday = 0, Sunday = 6)
-        // JavaScript: 0=Sunday, 1=Monday, 2=Tuesday, ..., 6=Saturday
-        // Calendar: 0=Monday, 1=Tuesday, 2=Wednesday, ..., 6=Sunday
-        let calendarDayIndex;
-        if (dayOfWeek === 0) { // Sunday
-          calendarDayIndex = 6; // Last column (index 6)
-        } else {
-          calendarDayIndex = dayOfWeek - 1; // Monday=0, Tuesday=1, etc.
-        }
-        
-        // Calculate the width of each day column
-        const gridWidth = calendarGrid.clientWidth;
-        const availableWidth = gridWidth - 80; // Subtract time column width
-        const columnWidth = availableWidth / 7;
-        leftPosition = 80 + (calendarDayIndex * columnWidth);
-      } else {
-        // For day view, use simple calculation
-        const totalMinutes = currentHour * 60 + currentMinute;
-        topPosition = totalMinutes;
+        setIsVisible(false);
+        return;
       }
-      
-      setPosition({ top: topPosition, left: leftPosition });
-    };
 
-    // Initial update
-    updatePosition();
+      const calendarGrid = calendarContainer.querySelector('.grid');
+      if (!calendarGrid) {
+        // Retry if grid not found
+        if (retryCountRef.current < MAX_RETRIES) {
+          retryCountRef.current++;
+          setTimeout(updatePosition, 100);
+        }
+        setIsVisible(false);
+        return;
+      }
+
+      // Find time labels
+      let timeLabels = calendarGrid.querySelectorAll('div[class*="text-sm text-gray-600"]');
+      if (timeLabels.length === 0) {
+        // Try alternative selectors
+        const allDivs = calendarGrid.querySelectorAll('div');
+        const potentialLabels: Element[] = [];
+        allDivs.forEach(div => {
+          const text = div.textContent?.trim();
+          if (text && /^\d{1,2}:\d{2}(\s*(AM|PM))?$/.test(text)) {
+            potentialLabels.push(div);
+          }
+        });
+        if (potentialLabels.length > 0) {
+          timeLabels = potentialLabels as unknown as NodeListOf<Element>;
+        }
+      }
+
+      if (timeLabels.length === 0) {
+        // Retry if no labels found
+        if (retryCountRef.current < MAX_RETRIES) {
+          retryCountRef.current++;
+          setTimeout(updatePosition, 100);
+        }
+        setIsVisible(false);
+        return;
+      }
+
+      // Find the current hour label
+      let currentHourLabel = null;
+      for (const label of timeLabels) {
+        const text = label.textContent?.trim();
+        if (!text) continue;
+        
+        // Check various time formats
+        const hour12 = currentHour === 0 ? 12 : currentHour > 12 ? currentHour - 12 : currentHour;
+        const ampm = currentHour < 12 ? 'AM' : 'PM';
+        
+        if (
+          text === `${currentHour.toString().padStart(2, '0')}:00` || 
+          text === `${currentHour}:00` ||
+          text === `${hour12}:00 ${ampm}` ||
+          text === `${hour12}:00 ${ampm.toLowerCase()}` ||
+          text.includes(`${currentHour}:00`) ||
+          text.includes(`${currentHour.toString().padStart(2, '0')}:00`)
+        ) {
+          currentHourLabel = label;
+          break;
+        }
+      }
+
+      if (!currentHourLabel) {
+        // Retry if current hour not found
+        if (retryCountRef.current < MAX_RETRIES) {
+          retryCountRef.current++;
+          setTimeout(updatePosition, 100);
+        }
+        setIsVisible(false);
+        return;
+      }
+
+      // Success - reset retry count
+      retryCountRef.current = 0;
+
+      const calendarRect = calendarGrid.getBoundingClientRect();
+      const labelRect = currentHourLabel.getBoundingClientRect();
+      
+      const hourHeight = 60; // Each hour is 60px
+      const minuteOffset = (currentMinute / 60) * hourHeight;
+      topPosition = (labelRect.top - calendarRect.top) + minuteOffset;
+      
+      // Get the current day of week for week view
+      const dayOfWeek = now.getDay();
+      let calendarDayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      
+      const gridWidth = calendarGrid.clientWidth;
+      const availableWidth = gridWidth - 80;
+      const columnWidth = availableWidth / 7;
+      leftPosition = 80 + (calendarDayIndex * columnWidth);
+    } else {
+      // For day view
+      const totalMinutes = currentHour * 60 + currentMinute;
+      topPosition = totalMinutes;
+    }
+    
+    setPosition({ top: topPosition, left: leftPosition });
+    setIsVisible(true);
+  }, [isWeekView]);
+
+  useEffect(() => {
+    // Initial update with proper timing
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        updatePosition();
+      }, 50);
+    });
 
     // Update every minute
     const interval = setInterval(updatePosition, 60000);
     
     // Update on window resize
-    window.addEventListener('resize', updatePosition);
+    const handleResize = () => {
+      requestAnimationFrame(updatePosition);
+    };
+    window.addEventListener('resize', handleResize, { passive: true });
+
+    // Observe DOM changes
+    const calendarContainer = document.querySelector('.calendar-week-view, .calendar-day-view');
+    if (calendarContainer) {
+      const observer = new MutationObserver(() => {
+        requestAnimationFrame(updatePosition);
+      });
+      
+      observer.observe(calendarContainer, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['class', 'style']
+      });
+
+      return () => {
+        clearInterval(interval);
+        window.removeEventListener('resize', handleResize);
+        observer.disconnect();
+      };
+    }
 
     return () => {
       clearInterval(interval);
-      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('resize', handleResize);
     };
-  }, [isWeekView]);
+  }, [updatePosition]);
 
   // Calculate width based on view type
   const getLineWidth = () => {
     if (isWeekView) {
-      // For week view, the line should span only one day column
       return 'calc((100% - 80px) / 7)';
     } else {
-      // For day view, span the full width minus time column
       return 'calc(100% - 80px)';
     }
   };
+
+  if (!isVisible) return null;
 
   return (
     <div
