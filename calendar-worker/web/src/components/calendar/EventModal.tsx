@@ -463,8 +463,8 @@ export function EventModal({
                       Delete
                     </button>
                   )}
-                  {/* Echo generation button only shows for existing events */}
-                  {localEvent && (
+                  {/* Echo generation button only shows for existing events with IDs */}
+                  {localEvent?.id && (
                     <button
                       type="button"
                       onClick={handleEchoGeneration}
