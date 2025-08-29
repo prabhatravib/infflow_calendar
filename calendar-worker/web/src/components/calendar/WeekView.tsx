@@ -2,6 +2,7 @@
 import { useMemo, Fragment } from 'react';
 import { getWeekDays, isSameDay, isToday, formatDate } from '../../lib/date';
 import { MinuteIndicator } from './MinuteIndicator';
+import { CurrentTimeLine } from './CurrentTimeLine';
 import { isLateHour } from '../../lib/utils';
 import { useSleepToggles } from './useSleepToggles';
 import { SleepToggleBars } from './SleepToggleBars';
@@ -161,6 +162,9 @@ export function WeekView({ date, events, onEventClick, onTimeSlotClick }: WeekVi
     <div className="calendar-week-view relative">
       {/* Minute Indicator - positioned absolutely over the calendar */}
       <MinuteIndicator />
+      
+      {/* Current Time Line - horizontal line across the calendar at current time */}
+      <CurrentTimeLine isWeekView={true} />
       
       {/* Single grid for headers and time slots */}
       <div className="grid grid-cols-8 relative">

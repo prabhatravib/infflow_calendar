@@ -128,31 +128,9 @@
 }
 
 /* Ensure the indicator is visible over calendar content */
-.calendar-week-view .grid,
-.calendar-day-view .grid {
+.calendar-week-view,
+.calendar-day-view {
   position: relative;
-}
-
-/* Position the minute indicator on the right edge of time axis */
-.calendar-week-view .grid .minute-indicator-container,
-.calendar-day-view .grid .minute-indicator-container {
-  left: 0;
-  width: 80px; /* Width of time axis column */
-}
-
-/* Ensure the minute indicator is positioned correctly relative to the grid */
-.calendar-week-view .grid,
-.calendar-day-view .grid {
-  position: relative;
-}
-
-/* Position the minute indicator line and label */
-.minute-indicator-line {
-  left: 70px !important; /* Position on the right edge of time axis */
-}
-
-.minute-indicator-minute {
-  left: 65px !important; /* Position label to the left of the line */
 }
 
 /* Weather tooltip styling */

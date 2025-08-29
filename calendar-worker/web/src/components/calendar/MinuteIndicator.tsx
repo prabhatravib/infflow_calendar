@@ -28,9 +28,9 @@ export function MinuteIndicator({ className = '' }: MinuteIndicatorProps) {
     };
 
     const updatePosition = () => {
-      // Find the current time position in the calendar
-      const calendarGrid = document.querySelector('.calendar-week-view .grid, .calendar-day-view .grid');
-      if (!calendarGrid) {
+      // Find the calendar container
+      const calendarContainer = document.querySelector('.calendar-week-view, .calendar-day-view');
+      if (!calendarContainer) {
         setIsVisible(false);
         return;
       }
@@ -39,18 +39,38 @@ export function MinuteIndicator({ className = '' }: MinuteIndicatorProps) {
       const currentHour = now.getHours();
       const currentMinute = now.getMinutes();
       
-      // Find time labels to determine actual positions
-      const timeLabels = calendarGrid.querySelectorAll('div[class*="text-xs text-gray-500"], div[class*="text-sm text-gray-600"]');
-      if (timeLabels.length === 0) {
+      // Find the calendar grid
+      const calendarGrid = calendarContainer.querySelector('.grid');
+      if (!calendarGrid) {
         setIsVisible(false);
         return;
+      }
+
+      // Find time labels using the same selector as CurrentTimeLine
+      let timeLabels = calendarGrid.querySelectorAll('div[class*="text-sm text-gray-600"]');
+      if (timeLabels.length === 0) {
+        // Try alternative selectors
+        const altLabels = calendarGrid.querySelectorAll('div.text-sm, div[style*="height: 60px"]');
+        if (altLabels.length === 0) {
+          setIsVisible(false);
+          return;
+        }
+        timeLabels = altLabels;
       }
 
       // Find the current hour label
       let currentHourLabel = null;
       for (const label of timeLabels) {
         const text = label.textContent?.trim();
-        if (text === `${currentHour.toString().padStart(2, '0')}:00` || text === `${currentHour}:00`) {
+        // Look for time format like "14:00", "2:00", "2:00 PM", etc.
+        if (text && (
+          text === `${currentHour.toString().padStart(2, '0')}:00` || 
+          text === `${currentHour}:00` ||
+          text.includes(`${currentHour}:00`) ||
+          text.includes(`${currentHour.toString().padStart(2, '0')}:00`) ||
+          text.includes(`${currentHour}:00 AM`) ||
+          text.includes(`${currentHour}:00 PM`)
+        )) {
           currentHourLabel = label;
           break;
         }
@@ -69,18 +89,8 @@ export function MinuteIndicator({ className = '' }: MinuteIndicatorProps) {
       const minuteOffset = (currentMinute / 60) * hourHeight;
       const topPosition = (labelRect.top - calendarRect.top) + minuteOffset;
       
-      // Calculate left position (right edge of the time axis)
-      const leftPosition = 80; // Width of time axis column
-
-      console.log('Minute indicator positioning:', {
-        currentHour,
-        currentMinute,
-        hourHeight,
-        minuteOffset,
-        topPosition,
-        leftPosition,
-        labelRect: labelRect.top - calendarRect.top
-      });
+      // Position on the right edge of the time axis column
+      const leftPosition = 78; // 80px width - 2px margin
 
       setPosition({
         top: topPosition,
@@ -106,9 +116,9 @@ export function MinuteIndicator({ className = '' }: MinuteIndicatorProps) {
     window.addEventListener('resize', handleResize);
 
     // Update position when calendar view changes
-    const calendarGrid = document.querySelector('.calendar-week-view .grid, .calendar-day-view .grid');
-    if (calendarGrid) {
-      calendarGrid.addEventListener('scroll', handleScroll);
+    const calendarContainer = document.querySelector('.calendar-week-view, .calendar-day-view');
+    if (calendarContainer) {
+      calendarContainer.addEventListener('scroll', handleScroll);
     }
 
     return () => {
@@ -116,8 +126,8 @@ export function MinuteIndicator({ className = '' }: MinuteIndicatorProps) {
       clearInterval(positionInterval);
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
-      if (calendarGrid) {
-        calendarGrid.removeEventListener('scroll', handleScroll);
+      if (calendarContainer) {
+        calendarContainer.removeEventListener('scroll', handleScroll);
       }
     };
   }, []);
@@ -125,7 +135,6 @@ export function MinuteIndicator({ className = '' }: MinuteIndicatorProps) {
   // Update indicator color when weather changes
   useEffect(() => {
     if (lineRef.current && labelRef.current) {
-      // Apply weather-based color to both line and label
       lineRef.current.style.backgroundColor = indicatorColor.color;
       lineRef.current.style.opacity = indicatorColor.opacity.toString();
       labelRef.current.style.color = indicatorColor.color;
@@ -134,11 +143,6 @@ export function MinuteIndicator({ className = '' }: MinuteIndicatorProps) {
   }, [indicatorColor]);
 
   if (!isVisible) return null;
-
-  // Get weather description for tooltip
-  const weatherDescription = weatherData?.forecast?.daily?.weathercode?.[0]
-    ? `Weather: ${weatherData.forecast.daily.weathercode[0] === 0 ? 'Clear' : 'Cloudy/Rainy'}`
-    : '';
 
   return (
     <div 
@@ -153,7 +157,6 @@ export function MinuteIndicator({ className = '' }: MinuteIndicatorProps) {
         pointerEvents: 'none',
         zIndex: 1000
       }}
-      title={weatherDescription}
     >
       {/* Vertical line indicator */}
       <div
@@ -195,38 +198,16 @@ export function MinuteIndicator({ className = '' }: MinuteIndicatorProps) {
           transition: 'color 0.3s ease, opacity 0.3s ease'
         }}
       >
-                 {currentMinute}
-         {weatherData && (
-           <span 
-             className="ml-1 text-xs opacity-75"
-             style={{ color: indicatorColor.color }}
-           >
-             {weatherData.forecast?.daily?.weathercode?.[0] === 0 ? '☀️' : '☁️'}
-           </span>
-         )}
+        {currentMinute}
+        {weatherData && (
+          <span 
+            className="ml-1 text-xs opacity-75"
+            style={{ color: indicatorColor.color }}
+          >
+            {weatherData.forecast?.daily?.weathercode?.[0] === 0 ? '☀️' : '☁️'}
+          </span>
+        )}
       </div>
-
-             {/* Weather info tooltip */}
-       {weatherData && (
-         <div
-           style={{
-             position: 'absolute',
-             top: `${position.top + 20}px`,
-             left: `${position.left - 50}px`,
-             fontSize: '10px',
-             color: indicatorColor.color,
-             opacity: 0.7,
-             pointerEvents: 'none',
-             userSelect: 'none',
-             zIndex: 1000,
-             background: 'rgba(255, 255, 255, 0.9)',
-             padding: '2px 4px',
-             borderRadius: '3px'
-           }}
-         >
-           <div>Weather: {weatherData.forecast?.daily?.weathercode?.[0] === 0 ? 'Clear' : 'Cloudy'}</div>
-         </div>
-       )}
     </div>
   );
 }

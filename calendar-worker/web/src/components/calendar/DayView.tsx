@@ -2,6 +2,7 @@
 import { useMemo, Fragment } from 'react';
 import { isSameDay, formatTime } from '../../lib/date';
 import { MinuteIndicator } from './MinuteIndicator';
+import { CurrentTimeLine } from './CurrentTimeLine';
 import { isEarlyHour, isLateHour } from '../../lib/utils';
 import { useSleepToggles } from './useSleepToggles';
 import { SleepToggleBars } from './SleepToggleBars';
@@ -190,6 +191,9 @@ export function DayView({ date, events, onEventClick, onTimeSlotClick }: DayView
       <div className="grid" style={{ gridTemplateColumns: '80px 1fr' }}>
         {/* Minute Indicator */}
         <MinuteIndicator />
+        
+        {/* Current Time Line - horizontal line across the calendar at current time */}
+        <CurrentTimeLine isWeekView={false} />
         
         {/* Early Hours Toggle - rendered at the very top when collapsed */}
         {(() => {
