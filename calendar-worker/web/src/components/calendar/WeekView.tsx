@@ -174,13 +174,16 @@ export function WeekView({ date, events, onEventClick, onTimeSlotClick }: WeekVi
           
           return (
             <Fragment key={hourIndex}>
-              {/* Time label */}
-              <div className="p-2 bg-white border-r border-gray-200 border-b border-gray-200 min-w-[80px] text-right pr-2 text-sm text-gray-600 font-medium">
-                {hour.toLocaleTimeString('en-US', { 
-                  hour: 'numeric', 
-                  minute: '2-digit',
-                  hour12: true 
-                })}
+              {/* Time label - positioned directly on the line */}
+              <div className="bg-white border-r border-gray-200 min-w-[80px] text-right pr-2 text-sm text-gray-600 font-medium relative">
+                <div className="absolute top-0 left-0 right-0 h-px bg-gray-200"></div>
+                <div className="absolute top-0 right-2 transform -translate-y-1/2 bg-white px-1">
+                  {hour.toLocaleTimeString('en-US', { 
+                    hour: 'numeric', 
+                    minute: '2-digit',
+                    hour12: true 
+                  })}
+                </div>
               </div>
               
               {/* Day columns */}
@@ -197,7 +200,7 @@ export function WeekView({ date, events, onEventClick, onTimeSlotClick }: WeekVi
                   <div
                     key={dayIndex}
                     className={`
-                      p-2 border-b border-gray-200 border-r border-gray-200 min-h-[60px] relative
+                      p-2 border-t border-gray-200 border-r border-gray-200 min-h-[60px] relative
                       ${isCurrentDay ? 'bg-blue-50' : 'bg-white'}
                       hover:bg-gray-50 transition-colors cursor-pointer
                     `}

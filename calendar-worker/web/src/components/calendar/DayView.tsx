@@ -141,21 +141,24 @@ export function DayView({ date, events, onEventClick, onTimeSlotClick }: DayView
           
           return (
             <Fragment key={hourIndex}>
-              {/* Timeline column - hour label */}
+              {/* Timeline column - hour label - positioned directly on the line */}
               <div
-                className={`p-2 text-sm text-black border-b border-gray-200 border-r border-gray-200 ${
+                className={`text-sm text-black border-r border-gray-200 relative ${
                   isEarly ? 'time-slot-early-hours' : ''
                 } ${
                   isLate ? 'time-slot-late-hours' : ''
                 }`}
                 style={{ height: '60px', color: 'black', backgroundColor: 'white' }}
               >
-                {formatTime(hour, 'HH:mm')}
+                <div className="absolute top-0 left-0 right-0 h-px bg-gray-200"></div>
+                <div className="absolute top-0 right-2 transform -translate-y-1/2 bg-white px-1">
+                  {formatTime(hour, 'HH:mm')}
+                </div>
               </div>
 
               {/* Events column - event content */}
               <div
-                className={`p-2 border-b border-gray-200 border-r border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors ${
+                className={`p-2 border-t border-gray-200 border-r border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors ${
                   isEarly ? 'time-slot-early-hours' : ''
                 } ${
                   isLate ? 'time-slot-late-hours' : ''
