@@ -17,8 +17,11 @@ class WeatherNowIndicator {
     // Look for the current time indicator
     this.indicatorElement = document.querySelector('.fc-timegrid-now-indicator-line');
     if (!this.indicatorElement) {
+      console.log('Weather indicator: Time indicator element not found, retrying...');
       // If not found, try to find it after a short delay
       setTimeout(() => this.findIndicator(), 1000);
+    } else {
+      console.log('Weather indicator: Found time indicator element:', this.indicatorElement);
     }
   }
 
@@ -62,6 +65,7 @@ class WeatherNowIndicator {
 
   applyBrightnessColor() {
     if (!this.indicatorElement || !this.currentWeather) {
+      console.log('Weather indicator: No indicator element or weather data, resetting to default');
       this.resetToDefault();
       return;
     }
@@ -87,6 +91,7 @@ class WeatherNowIndicator {
     }
 
     if (isDark) {
+      console.log('Weather indicator: Setting dark mode color (black)');
       this.setIndicatorColor('#000000', 1);
       return;
     }
@@ -98,6 +103,8 @@ class WeatherNowIndicator {
     const isBad = this.isDimWeather(conditions, weatherCode);
     const color = isBad ? '#9ca3af' /* gray-400 */ : '#fde047' /* yellow-300 */;
     const opacity = isBad ? 0.9 : 1;
+    
+    console.log('Weather indicator: Setting daytime color:', color, 'opacity:', opacity, 'isBad:', isBad);
     this.setIndicatorColor(color, opacity);
   }
 
@@ -188,10 +195,18 @@ class WeatherNowIndicator {
 
   setIndicatorColor(color, opacity) {
     if (!this.indicatorElement) return;
+    
+    // Set the main line color
     this.indicatorElement.style.borderColor = color;
-    // Also set CSS color so ::before/::after end dots inherit same hue
     this.indicatorElement.style.color = color;
     this.indicatorElement.style.opacity = String(opacity);
+    
+    // Also set the color on the parent container to ensure ::before/::after dots inherit
+    const parentContainer = this.indicatorElement.closest('.fc-timegrid');
+    if (parentContainer) {
+      parentContainer.style.setProperty('--now-indicator-color', color);
+    }
+    
     const arrowElement = document.querySelector('.fc-timegrid-now-indicator-arrow');
     if (arrowElement) {
       arrowElement.style.borderColor = color;

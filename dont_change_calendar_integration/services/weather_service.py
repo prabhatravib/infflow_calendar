@@ -212,6 +212,8 @@ class WeatherService:
                     # Remove 'display': 'background' completely
                     'backgroundColor': '#ffb3b3',
                     'type': 'weather-warning',
+                    'eventType': 'weather',  # Add eventType for proper styling
+                    'user_id': 'default_user',  # Add user_id so events aren't filtered out
                     'details': day_forecast,
                     'editable': False  # Make non-editable
                 }

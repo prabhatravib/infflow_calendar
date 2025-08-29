@@ -91,8 +91,9 @@ async function loadWeatherData() {
             weatherEvents = response.weather_events || [];
             console.log(`Loaded ${weatherEvents.length} weather events`);
             
-            // Update calendar with weather events
-            updateCalendarWithWeatherEvents();
+            // Don't update calendar with weather events here since they're already loaded
+            // from the main events endpoint. Just store the data for reference.
+            // The weather events will be rendered when the main events are filtered and rendered.
         }
         
     } catch (error) {
@@ -151,14 +152,10 @@ function updateCalendarWithWeatherEvents() {
  * Setup weather event rendering
  */
 function setupWeatherEventRendering() {
-    // Re-render weather events when calendar view changes
-    if (window.calendar) {
-        window.calendar.setOption('datesSet', function() {
-            setTimeout(() => {
-                updateCalendarWithWeatherEvents();
-            }, 100);
-        });
-    }
+    // Weather events are now loaded from the main events endpoint
+    // and rendered through the normal filtering system.
+    // No need to re-render them separately.
+    console.log('Weather event rendering setup - events loaded via main events endpoint');
 }
 
 /**

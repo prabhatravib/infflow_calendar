@@ -74,7 +74,7 @@ export async function loadEvents(calendar, userId) {
 
     // Debug: List all event titles and types
     allLoadedEvents.forEach((event, index) => {
-        console.log(`Event ${index + 1}: "${event.title}" (${event.eventType || 'regular'}) - ${event.start_time}`);
+        console.log(`Event ${index + 1}: "${event.title}" (${event.eventType || 'regular'}) - ${event.start_time} - Type: ${event.type || 'none'}`);
     });
 
   } catch (err) {

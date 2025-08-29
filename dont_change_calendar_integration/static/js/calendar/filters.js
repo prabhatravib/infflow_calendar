@@ -148,8 +148,15 @@ export function filterAndRenderEvents() {
     let textColor = undefined;
     let classNames = [];
     const eventType = (ev.eventType || 'other').toLowerCase();
+    const type = (ev.type || '').toLowerCase();
     
-    if (eventType === 'fun') {
+    // Special handling for weather events
+    if (type === 'weather-warning') {
+      backgroundColor = '#ffb3b3';
+      borderColor = '#ff8080';
+      textColor = '#d00000';
+      classNames.push('fc-event-weather', 'event-weather');
+    } else if (eventType === 'fun') {
       backgroundColor = '#e91e63';
       textColor = '#fff';
       classNames.push('event-fun');

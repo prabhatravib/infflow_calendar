@@ -314,7 +314,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: currentColor; /* uses the element's color; set via JS */
+  background: var(--now-indicator-color, currentColor); /* Use CSS variable with fallback */
   top: -2px; /* center the 6px dot on a 2px line */
 }
 .fc-timegrid-now-indicator-line::before { left: -3px; }

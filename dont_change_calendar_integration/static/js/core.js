@@ -458,8 +458,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Initialize weather-aware now indicator if available
         if (nowIndicatorModule && nowIndicatorModule.initializeWeatherNowIndicator) {
           try {
-            nowIndicatorModule.initializeWeatherNowIndicator(window.calendar);
-            console.log('✅ Weather now indicator initialized');
+            // Add a delay to ensure calendar is fully rendered
+            setTimeout(() => {
+              nowIndicatorModule.initializeWeatherNowIndicator(window.calendar);
+              console.log('✅ Weather now indicator initialized');
+            }, 1000);
           } catch (e) {
             console.warn('⚠️ Weather now indicator init failed:', e);
           }
@@ -476,6 +479,24 @@ document.addEventListener('DOMContentLoaded', () => {
         // Recenter after indicators are inserted, in case heights changed subtly
         setTimeout(() => {
           try { centerNowLine(calendar, 0); } catch (_) {}
+          
+          // Fallback: Set time indicator to default good weather color (yellow)
+          try {
+            const nowLine = document.querySelector('.fc-timegrid-now-indicator-line');
+            if (nowLine) {
+              nowLine.style.borderColor = '#fde047'; // yellow-300
+              nowLine.style.color = '#fde047';
+              
+              // Also set CSS variable for dots
+              const parentContainer = nowLine.closest('.fc-timegrid');
+              if (parentContainer) {
+                parentContainer.style.setProperty('--now-indicator-color', '#fde047');
+              }
+              console.log('✅ Set default time indicator color (yellow)');
+            }
+          } catch (e) {
+            console.warn('⚠️ Failed to set default time indicator color:', e);
+          }
         }, 300);
     }).catch(error => {
       console.warn('⚠️ Some modules failed to load:', error);
