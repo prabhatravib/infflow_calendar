@@ -20,7 +20,7 @@ export function MinuteIndicator({ className = '' }: MinuteIndicatorProps) {
   const { location } = useLocation();
 
   // Use weather-aware hook for indicator colors
-  const { indicatorColor, weatherData } = useWeatherAwareMinuteIndicator(location);
+  const { indicatorColor } = useWeatherAwareMinuteIndicator(location);
 
   const updateMinute = useCallback(() => {
     const now = new Date();
@@ -275,14 +275,6 @@ export function MinuteIndicator({ className = '' }: MinuteIndicatorProps) {
         }}
       >
         {currentMinute}
-        {weatherData && (
-          <span 
-            className="ml-1 text-xs opacity-75"
-            style={{ color: indicatorColor.color }}
-          >
-            {weatherData.forecast?.daily?.weathercode?.[0] === 0 ? '☀️' : '☁️'}
-          </span>
-        )}
       </div>
     </div>
   );
