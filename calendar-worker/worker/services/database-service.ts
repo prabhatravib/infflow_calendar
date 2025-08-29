@@ -122,7 +122,7 @@ export class DatabaseService {
   }
 
   async createEchoEvents(parentEvent: Event, followups: any[], mermaidCode: string, userId: string): Promise<any[]> {
-    const createdEvents = [];
+    const createdEvents: any[] = [];
     
     for (const followup of followups) {
       const followupId = generateUUID();

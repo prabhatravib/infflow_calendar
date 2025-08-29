@@ -126,6 +126,21 @@ export async function deleteEvent(eventId: string): Promise<void> {
   }
 }
 
+export async function clearAllEvents(calendarId: string): Promise<void> {
+  try {
+    const response = await fetch(`${API_BASE}/events?calendarId=${encodeURIComponent(calendarId)}`, {
+      method: 'DELETE',
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to clear events: ${response.statusText}`);
+    }
+  } catch (error) {
+    console.error('Error clearing events:', error);
+    throw error;
+  }
+}
+
 export async function downloadICS(userId: string): Promise<void> {
   try {
     const response = await fetch(`${API_BASE}/ics/${userId}`);

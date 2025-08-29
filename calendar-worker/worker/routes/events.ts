@@ -121,3 +121,18 @@ eventsRouter.delete('/api/events/:id', async (c) => {
     return createErrorResponse(c, 'Failed to delete event');
   }
 });
+
+// DELETE /api/events - Clear all events for a calendar
+eventsRouter.delete('/api/events', async (c) => {
+  try {
+    const calendarId = c.req.query('calendarId') ?? CALENDAR_ID;
+    
+    const dbService = new DatabaseService(c.env.DB);
+    await dbService.clearAllEvents(calendarId);
+
+    return createSuccessResponse(c, { message: 'All events cleared successfully' });
+  } catch (error) {
+    console.error('Error clearing events:', error);
+    return createErrorResponse(c, 'Failed to clear events');
+  }
+});

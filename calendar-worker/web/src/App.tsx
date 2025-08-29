@@ -4,8 +4,9 @@ import { EventModal } from './components/calendar/EventModal';
 import { Sidebar, EventFilters } from './components/calendar/Sidebar';
 import { LocationProvider } from './lib/contexts/LocationContext';
 import { useEventFiltering } from './lib/hooks/useEventFiltering';
-import { fetchEvents, createEvent, updateEvent, deleteEvent, seedDemoData } from './lib/api';
+import { fetchEvents, createEvent, updateEvent, deleteEvent } from './lib/api';
 import type { Event } from './lib/api';
+import type { View } from './lib/date';
 
 const DEMO_CALENDAR_ID = '3c414e29-a3c3-4350-a334-5585cb22737a';
 
@@ -16,6 +17,8 @@ function App() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [selectedHour, setSelectedHour] = useState<number | undefined>();
+  const [currentView, setCurrentView] = useState<View>('week');
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   // Ensure events is always an array
   const safeEvents = Array.isArray(events) ? events : [];
@@ -24,40 +27,49 @@ function App() {
   const { filteredEvents, updateFilter, getFilterStats } = useEventFiltering(safeEvents);
 
   useEffect(() => {
-    loadEvents();
+    // Initialize with default values and load events
+    const initialView: View = 'week';
+    const initialDate = new Date();
+    setCurrentView(initialView);
+    setCurrentDate(initialDate);
+    
+    // Load events with initial parameters
+    loadEvents(initialView, initialDate);
   }, []);
 
-  const loadEvents = async () => {
+  // Handle view/date changes after initial load
+  useEffect(() => {
+    // Skip the first render to avoid duplicate loading
+    if (currentView && currentDate) {
+      // Only reload if this is not the initial load
+      const isInitialLoad = currentView === 'week' && 
+        currentDate.toDateString() === new Date().toDateString();
+      
+      if (!isInitialLoad) {
+        loadEvents(currentView, currentDate);
+      }
+    }
+  }, [currentView, currentDate]);
+
+  // Load events based on current view and date
+  const loadEvents = async (view: View = 'week', date: Date = new Date()) => {
     try {
       setIsLoading(true);
       
-      // Seed demo data first
-      await seedDemoData();
+      // Don't load any events - just set empty array
+      setEvents([]);
       
-      // Fetch events for the current month
-      const now = new Date();
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-      
-      const fetchedEvents = await fetchEvents(
-        DEMO_CALENDAR_ID,
-        startOfMonth.toISOString(),
-        endOfMonth.toISOString()
-      );
-      
-      // Ensure fetchedEvents is always an array
-      const safeFetchedEvents = Array.isArray(fetchedEvents) ? fetchedEvents : [];
-      setEvents(safeFetchedEvents);
     } catch (error) {
       console.error('Error loading events:', error);
-      // If calendar doesn't exist yet, create it and try again
-      if (error instanceof Error && error.message.includes('Failed to fetch events')) {
-        await seedDemoData();
-        await loadEvents();
-      }
+      setEvents([]);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Function to reload events when calendar view/date changes
+  const reloadEvents = (view: View, date: Date) => {
+    loadEvents(view, date);
   };
 
   const handleEventClick = (event: Event) => {
@@ -92,6 +104,9 @@ function App() {
         });
         setEvents(prev => [...prev, newEvent]);
       }
+      
+      // Reload events to ensure all events are up to date
+      await loadEvents(currentView, currentDate);
       
       setIsModalOpen(false);
       setSelectedEvent(null);
@@ -174,6 +189,14 @@ function App() {
                 onEventClick={handleEventClick}
                 onDateClick={handleDateClick}
                 onTimeSlotClick={handleTimeSlotClick}
+                onViewChange={(view) => {
+                  setCurrentView(view);
+                  reloadEvents(view, currentDate);
+                }}
+                onDateChange={(date) => {
+                  setCurrentDate(date);
+                  reloadEvents(currentView, date);
+                }}
               />
             )}
           </div>
