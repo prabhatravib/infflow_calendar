@@ -5,12 +5,15 @@ import type { Event } from '../../lib/api';
 interface EchoTabProps {
   event: Event | null;
   onBackToDetails: () => void;
+  onEventsRefresh?: () => Promise<void>;
+  onEchoReset?: () => void;
 }
 
-export function EchoTab({ event, onBackToDetails }: EchoTabProps) {
+export function EchoTab({ event, onBackToDetails, onEventsRefresh, onEchoReset }: EchoTabProps) {
   const [flowchart, setFlowchart] = useState<string>('');
   const [hasEcho, setHasEcho] = useState(false);
   const [isRenderingFlowchart, setIsRenderingFlowchart] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const mermaidContainerRef = useRef<HTMLDivElement>(null);
 
   // Initialize Mermaid
@@ -83,6 +86,55 @@ export function EchoTab({ event, onBackToDetails }: EchoTabProps) {
     }
   }, [event]);
 
+  const handleResetEcho = async () => {
+    if (!event?.id || !hasEcho) return;
+    
+    if (!confirm('Are you sure you want to reset the echo flow? This will delete all follow-up events and the flowchart.')) {
+      return;
+    }
+    
+    setIsResetting(true);
+    try {
+      const response = await fetch(`/api/events/${event.id}/echo/reset`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: 'demo-user' })
+      });
+      
+      if (response.ok) {
+        // Clear local state immediately
+        setFlowchart('');
+        setHasEcho(false);
+        
+        // Clear the mermaid container
+        if (mermaidContainerRef.current) {
+          mermaidContainerRef.current.innerHTML = '';
+        }
+        
+        // Notify parent component that echo was reset
+        if (onEchoReset) {
+          onEchoReset();
+        }
+        
+        // Refresh events list to get updated data
+        if (onEventsRefresh) {
+          await onEventsRefresh();
+        }
+        
+        console.log('Echo reset successfully');
+      } else {
+        const errorText = await response.text();
+        console.error('Failed to reset echo:', errorText);
+        alert('Failed to reset echo. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error resetting echo:', error);
+      alert('Failed to reset echo. Please try again.');
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   return (
     <div className="px-4 py-2">
       <div className="mb-4">
@@ -127,7 +179,7 @@ export function EchoTab({ event, onBackToDetails }: EchoTabProps) {
         )}
       </div>
       
-      <div className="flex justify-center">
+      <div className="flex justify-center space-x-3">
         <button
           type="button"
           onClick={onBackToDetails}
@@ -135,6 +187,17 @@ export function EchoTab({ event, onBackToDetails }: EchoTabProps) {
         >
           Back to Details
         </button>
+        
+        {hasEcho && (
+          <button
+            type="button"
+            onClick={handleResetEcho}
+            disabled={isResetting}
+            className="px-3 py-1.5 text-sm font-medium text-red-600 border border-red-600 rounded-md hover:bg-red-50 disabled:opacity-50"
+          >
+            {isResetting ? 'Resetting...' : 'Reset Echo'}
+          </button>
+        )}
       </div>
     </div>
   );

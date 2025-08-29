@@ -271,6 +271,17 @@ export function EventModal({
     }
   };
 
+  const handleEchoReset = () => {
+    // Clear echo state when echo is reset
+    setHasEcho(false);
+    
+    // Update local event to remove flowchart
+    if (localEvent) {
+      const updatedEvent = { ...localEvent, flowchart: undefined };
+      setLocalEvent(updatedEvent);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -501,6 +512,8 @@ export function EventModal({
             <EchoTab 
               event={localEvent || null} 
               onBackToDetails={() => setActiveTab('details')}
+              onEventsRefresh={onEventsRefresh}
+              onEchoReset={handleEchoReset}
             />
           )}
         </div>
