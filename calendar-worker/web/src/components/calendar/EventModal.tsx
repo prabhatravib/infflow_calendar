@@ -12,7 +12,6 @@ interface EventModalProps {
   selectedHour?: number;
   onSave: (eventData: CreateEventRequest | UpdateEventRequest) => Promise<void>;
   onDelete?: (eventId: string) => Promise<void>;
-  onEventsRefresh?: () => Promise<void>;
 }
 
 export function EventModal({ 
@@ -23,8 +22,7 @@ export function EventModal({
   selectedDate, 
   selectedHour,
   onSave, 
-  onDelete,
-  onEventsRefresh
+  onDelete
 }: EventModalProps) {
   const [localEvent, setLocalEvent] = useState<Event | null>(event || null);
   const [title, setTitle] = useState('');
@@ -207,39 +205,30 @@ export function EventModal({
         // Update echo state
         setHasEcho(true);
         
-        // Refresh events list in the background instead of reloading the page
-        if (onEventsRefresh) {
+        // Only refresh the current event data to get the updated flowchart
+        // Don't refresh all events to avoid calendar re-rendering
+        if (localEvent?.id) {
           try {
-            await onEventsRefresh();
-            
-            // Also refresh the current event data to get the updated flowchart
-            if (localEvent?.id) {
-              try {
-                const response = await fetch(`/api/events/${localEvent.id}`);
-                if (response.ok) {
-                  const responseData = await response.json();
-                  console.log('Updated event data:', responseData);
-                  
-                  // Extract the event from the response
-                  const updatedEvent = responseData.event;
-                  
-                  // Update the local event state with the new flowchart
-                  if (updatedEvent && updatedEvent.flowchart) {
-                    console.log('Setting localEvent to:', updatedEvent);
-                    setLocalEvent(updatedEvent); // Update the local event state with new data
-                    setHasEcho(true);
-                    console.log('Event data refreshed with new flowchart');
-                  } else {
-                    console.log('No flowchart found in updated event:', updatedEvent);
-                  }
-                }
-              } catch (fetchError) {
-                console.warn('Failed to fetch updated event:', fetchError);
-                // Don't fail the entire operation for this
+            const response = await fetch(`/api/events/${localEvent.id}`);
+            if (response.ok) {
+              const responseData = await response.json();
+              console.log('Updated event data:', responseData);
+              
+              // Extract the event from the response
+              const updatedEvent = responseData.event;
+              
+              // Update the local event state with the new flowchart
+              if (updatedEvent && updatedEvent.flowchart) {
+                console.log('Setting localEvent to:', updatedEvent);
+                setLocalEvent(updatedEvent); // Update the local event state with new data
+                setHasEcho(true);
+                console.log('Event data refreshed with new flowchart');
+              } else {
+                console.log('No flowchart found in updated event:', updatedEvent);
               }
             }
-          } catch (refreshError) {
-            console.warn('Failed to refresh events:', refreshError);
+          } catch (fetchError) {
+            console.warn('Failed to fetch updated event:', fetchError);
             // Don't fail the entire operation for this
           }
         }
@@ -512,7 +501,6 @@ export function EventModal({
             <EchoTab 
               event={localEvent || null} 
               onBackToDetails={() => setActiveTab('details')}
-              onEventsRefresh={onEventsRefresh}
               onEchoReset={handleEchoReset}
             />
           )}

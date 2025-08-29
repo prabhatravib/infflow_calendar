@@ -193,7 +193,6 @@ function App() {
           selectedHour={selectedHour}
           onSave={handleSaveEvent}
           onDelete={selectedEvent ? handleDeleteEvent : undefined}
-          onEventsRefresh={loadEvents}
         />
       </div>
     </LocationProvider>

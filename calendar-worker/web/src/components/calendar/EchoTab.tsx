@@ -5,11 +5,10 @@ import type { Event } from '../../lib/api';
 interface EchoTabProps {
   event: Event | null;
   onBackToDetails: () => void;
-  onEventsRefresh?: () => Promise<void>;
   onEchoReset?: () => void;
 }
 
-export function EchoTab({ event, onBackToDetails, onEventsRefresh, onEchoReset }: EchoTabProps) {
+export function EchoTab({ event, onBackToDetails, onEchoReset }: EchoTabProps) {
   const [flowchart, setFlowchart] = useState<string>('');
   const [hasEcho, setHasEcho] = useState(false);
   const [isRenderingFlowchart, setIsRenderingFlowchart] = useState(false);
@@ -116,10 +115,8 @@ export function EchoTab({ event, onBackToDetails, onEventsRefresh, onEchoReset }
           onEchoReset();
         }
         
-        // Refresh events list to get updated data
-        if (onEventsRefresh) {
-          await onEventsRefresh();
-        }
+        // Don't refresh all events to avoid calendar re-rendering
+        // The local state is already updated above
         
         console.log('Echo reset successfully');
       } else {
@@ -139,13 +136,6 @@ export function EchoTab({ event, onBackToDetails, onEventsRefresh, onEchoReset }
     <div className="px-4 py-2">
       <div className="mb-4">
         
-        {!hasEcho && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
-            <p className="text-sm text-blue-800 mb-3">
-              Use the "🎯 Generate Echo Events" button in the Details tab to create a flowchart of follow-up events for this appointment.
-            </p>
-          </div>
-        )}
       </div>
       
       <div className="bg-gray-50 rounded-lg p-4 mb-4 min-h-[300px] flex items-center justify-center">
