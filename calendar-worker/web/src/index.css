@@ -77,6 +77,130 @@ html, body {
   }
 }
 
+/* Day Weather Component Styles */
+.day-weather {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  margin-top: 4px;
+}
+
+.day-weather .weather-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.2;
+  text-align: center;
+  transition: all 0.2s ease;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.day-weather .weather-summary.bad-weather {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.day-weather .weather-summary.good-weather {
+  background-color: #f9fafb;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+}
+
+.day-weather .weather-icon {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.day-weather .weather-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.day-weather .weather-details {
+  font-size: 10px;
+  margin-top: 2px;
+  line-height: 1;
+}
+
+/* Weather Event Styles */
+.weather-event {
+  background-color: #ffb3b3 !important;
+  border-color: #ff8080 !important;
+  color: #d00000 !important;
+  font-size: 11px !important;
+  padding: 2px 4px !important;
+  margin: 1px 2px !important;
+  border-radius: 4px !important;
+  cursor: default !important;
+  opacity: 0.9;
+}
+
+.weather-event:hover {
+  opacity: 1;
+  transform: none !important;
+}
+
+/* All-day event container for weather */
+.all-day-events {
+  min-height: 40px; /* Increased from 24px to make it thicker */
+  padding: 4px 2px; /* Increased vertical padding */
+  border-bottom: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+  /* Force fixed width and prevent horizontal expansion */
+  width: calc(100% - 4px); /* Account for padding */
+  max-width: calc(100% - 4px);
+  box-sizing: border-box;
+  overflow: hidden;
+  word-wrap: break-word;
+  white-space: normal;
+}
+
+/* All-day events section for Day view */
+.all-day-events-section {
+  min-height: 60px; /* Make it thick enough for weather info */
+  padding: 8px;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  /* Force fixed width and prevent horizontal expansion */
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  word-wrap: break-word;
+  white-space: normal;
+}
+
+/* Force weather event text to wrap within container */
+.weather-event {
+  background-color: #ffb3b3 !important;
+  border-color: #ff8080 !important;
+  color: #d00000 !important;
+  font-size: 11px !important;
+  padding: 2px 4px !important;
+  margin: 1px 2px !important;
+  border-radius: 4px !important;
+  cursor: default !important;
+  opacity: 0.9;
+  /* Force text wrapping */
+  word-wrap: break-word;
+  white-space: normal;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .calendar-month-view .grid {
@@ -89,6 +213,19 @@ html, body {
   
   .calendar-day-view .grid {
     grid-template-columns: 60px 1fr;
+  }
+  
+  .day-weather {
+    min-height: 32px;
+  }
+  
+  .day-weather .weather-summary {
+    padding: 2px 6px;
+    font-size: 10px;
+  }
+  
+  .day-weather .weather-icon {
+    font-size: 10px;
   }
 }
 

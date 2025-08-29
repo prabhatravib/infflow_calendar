@@ -2,10 +2,10 @@
 import { useMemo, Fragment } from 'react';
 import { getWeekDays, isSameDay, isToday, formatDate } from '../../lib/date';
 import { MinuteIndicator } from './MinuteIndicator';
-import { DayWeather } from './DayWeather';
 import { isLateHour } from '../../lib/utils';
 import { useSleepToggles } from './useSleepToggles';
 import { SleepToggleBars } from './SleepToggleBars';
+import { useWeatherEvents } from '../../lib/hooks/useWeatherEvents';
 import type { Event } from '../../lib/api';
 
 interface WeekViewProps {
@@ -33,9 +33,44 @@ export function WeekView({ date, events, onEventClick, onTimeSlotClick }: WeekVi
     handleEarlyHoursToggle,
     handleLateHoursToggle
   } = useSleepToggles();
+
+  // Get weather events
+  const { weatherEvents } = useWeatherEvents();
   
   // Ensure events is always an array and never undefined
   const safeEvents = Array.isArray(events) ? events : [];
+
+  // Combine regular events with weather events
+  const allEvents = useMemo(() => {
+    const combined = [...safeEvents];
+    
+    // Add weather events
+    console.log('Weather events from hook:', weatherEvents);
+    weatherEvents.forEach(weatherEvent => {
+      const convertedEvent = {
+        id: weatherEvent.id,
+        title: weatherEvent.title,
+        start: weatherEvent.start,
+        end: weatherEvent.end,
+        all_day: weatherEvent.allDay,
+        backgroundColor: weatherEvent.backgroundColor,
+        borderColor: weatherEvent.borderColor,
+        textColor: weatherEvent.textColor,
+        type: weatherEvent.type,
+        eventType: 'other', // Use 'other' since weather isn't in the allowed types
+        calendar_id: 'weather',
+        tz: 'UTC',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      } as Event;
+      
+      console.log('Converting weather event:', weatherEvent, 'to:', convertedEvent);
+      combined.push(convertedEvent);
+    });
+    
+    console.log('Final allEvents array:', combined);
+    return combined;
+  }, [safeEvents, weatherEvents]);
 
   // Filter hours based on sleep toggle states
   const hours = useMemo(() => {
@@ -59,12 +94,12 @@ export function WeekView({ date, events, onEventClick, onTimeSlotClick }: WeekVi
   }, [hours, calculateTogglePositions]);
 
   const getEventsForDateAndHour = (date: Date, hour: number) => {
-    // Ensure safeEvents is always an array before filtering
-    if (!Array.isArray(safeEvents)) {
+    // Ensure allEvents is always an array before filtering
+    if (!Array.isArray(allEvents)) {
       return [];
     }
     
-    return safeEvents.filter(event => {
+    return allEvents.filter(event => {
       if (!event || !event.start) {
         return false;
       }
@@ -72,6 +107,12 @@ export function WeekView({ date, events, onEventClick, onTimeSlotClick }: WeekVi
       try {
         const eventDate = new Date(event.start);
         if (isNaN(eventDate.getTime())) {
+          return false;
+        }
+        
+        // Exclude all-day events (like weather) from hourly grid
+        // They will only appear in the all-day section above
+        if (event.all_day) {
           return false;
         }
         
@@ -86,7 +127,7 @@ export function WeekView({ date, events, onEventClick, onTimeSlotClick }: WeekVi
 
   const getEventTypeColor = (event: Event) => {
     if (event.type === 'weather-warning') {
-      return 'bg-red-100 text-red-800 border-red-300';
+      return 'weather-event';
     }
     
     const eventType = event.eventType || 'other';
@@ -137,8 +178,41 @@ export function WeekView({ date, events, onEventClick, onTimeSlotClick }: WeekVi
             `}>
               <div className="font-bold">{formatDate(day, 'EEE')}</div>
               <div className="text-xs mb-2">{formatDate(day, 'MMM dd')}</div>
-              {/* Weather for this day */}
-              <DayWeather date={day} className="mt-1" />
+              
+              {/* All-day events (including weather) */}
+              {(() => {
+                const allDayEvents = allEvents.filter(event => {
+                  if (!event || !event.start) return false;
+                  try {
+                    const eventDate = new Date(event.start);
+                    return isSameDay(eventDate, day) && event.all_day;
+                  } catch (error) {
+                    return false;
+                  }
+                });
+                
+                if (allDayEvents.length === 0) return null;
+                
+                return (
+                  <div className="all-day-events">
+                    {allDayEvents.map((event) => (
+                      <div
+                        key={event.id}
+                        className={`text-xs p-1 rounded mb-1 cursor-pointer hover:opacity-80 transition-opacity border ${getEventTypeColor(event)}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEventClick?.(event);
+                        }}
+                      >
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs">{getEventTypeIcon(event)}</span>
+                          <span className="truncate">{event.title || 'Untitled Event'}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           );
         })}

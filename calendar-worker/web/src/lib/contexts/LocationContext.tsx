@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import { weatherService } from '../services/weatherService';
 
 interface LocationContextType {
@@ -13,8 +13,29 @@ interface LocationProviderProps {
   defaultLocation?: string;
 }
 
+const LOCATION_STORAGE_KEY = 'calendar_location';
+
 export function LocationProvider({ children, defaultLocation = 'New York' }: LocationProviderProps) {
-  const [location, setLocation] = useState(defaultLocation);
+  // Initialize location from localStorage or use default
+  const [location, setLocation] = useState(() => {
+    try {
+      const saved = localStorage.getItem(LOCATION_STORAGE_KEY);
+      return saved || defaultLocation;
+    } catch (error) {
+      console.error('Error loading location from localStorage:', error);
+      return defaultLocation;
+    }
+  });
+
+  // Save location to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(LOCATION_STORAGE_KEY, location);
+      console.log('Location saved to localStorage:', location);
+    } catch (error) {
+      console.error('Error saving location to localStorage:', error);
+    }
+  }, [location]);
 
   const handleLocationChange = useCallback((newLocation: string) => {
     setLocation(newLocation);
