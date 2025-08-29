@@ -1,0 +1,271 @@
+
+import { useMemo, Fragment } from 'react';
+import { getWeekDays, isSameDay, isToday, formatDate } from '../../lib/date';
+import { MinuteIndicator } from './MinuteIndicator';
+import { DayWeather } from './DayWeather';
+import { isLateHour } from '../../lib/utils';
+import { useSleepToggles } from './useSleepToggles';
+import { SleepToggleBars } from './SleepToggleBars';
+import type { Event } from '../../lib/api';
+
+interface WeekViewProps {
+  date: Date;
+  events: Event[];
+  onEventClick?: (event: Event) => void;
+  onTimeSlotClick?: (date: Date, hour: number) => void;
+}
+
+export function WeekView({ date, events, onEventClick, onTimeSlotClick }: WeekViewProps) {
+  // Ensure date is valid
+  const safeDate = date instanceof Date && !isNaN(date.getTime()) ? date : new Date();
+  
+  // Get week days with safety check - memoized to prevent unnecessary recalculations
+  const weekDays = useMemo(() => {
+    return getWeekDays(safeDate, 1) || [];
+  }, [safeDate]);
+  
+  // Use shared sleep toggle logic
+  const {
+    earlyHoursCollapsed,
+    lateHoursCollapsed,
+    filterHoursByToggles,
+    calculateTogglePositions,
+    handleEarlyHoursToggle,
+    handleLateHoursToggle
+  } = useSleepToggles();
+  
+  // Ensure events is always an array and never undefined
+  const safeEvents = Array.isArray(events) ? events : [];
+
+  // Filter hours based on sleep toggle states
+  const hours = useMemo(() => {
+    try {
+      // Always generate all 24 hours first
+      const allHours = [];
+      for (let hour = 0; hour < 24; hour++) {
+        allHours.push(new Date(1970, 0, 1, hour));
+      }
+      
+      return filterHoursByToggles(allHours);
+    } catch (error) {
+      console.error('Error generating hours array:', error);
+      return [];
+    }
+  }, [filterHoursByToggles]);
+
+  // Calculate toggle positions using shared logic
+  const togglePositions = useMemo(() => {
+    return calculateTogglePositions(hours);
+  }, [hours, calculateTogglePositions]);
+
+  const getEventsForDateAndHour = (date: Date, hour: number) => {
+    // Ensure safeEvents is always an array before filtering
+    if (!Array.isArray(safeEvents)) {
+      return [];
+    }
+    
+    return safeEvents.filter(event => {
+      if (!event || !event.start) {
+        return false;
+      }
+      
+      try {
+        const eventDate = new Date(event.start);
+        if (isNaN(eventDate.getTime())) {
+          return false;
+        }
+        
+        const eventHour = eventDate.getHours();
+        return isSameDay(eventDate, date) && eventHour === hour;
+      } catch (error) {
+        console.error('Error processing event:', event, error);
+        return false;
+      }
+    });
+  };
+
+  const getEventTypeColor = (event: Event) => {
+    if (event.type === 'weather-warning') {
+      return 'bg-red-100 text-red-800 border-red-300';
+    }
+    
+    const eventType = event.eventType || 'other';
+    switch (eventType) {
+      case 'work':
+        return 'bg-blue-100 text-blue-800 border-blue-300';
+      case 'fun':
+        return 'bg-pink-100 text-pink-800 border-pink-300';
+      case 'other':
+        return 'bg-green-100 text-green-800 border-green-300';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-300';
+    }
+  };
+
+  const getEventTypeIcon = (event: Event) => {
+    if (event.type === 'weather-warning') return '⛈️';
+    
+    const eventType = event.eventType || 'other';
+    switch (eventType) {
+      case 'work': return '💼';
+      case 'fun': return '🎉';
+      case 'other': return '📅';
+      default: return '📅';
+    }
+  };
+
+
+
+  return (
+    <div className="calendar-week-view relative">
+      {/* Minute Indicator - positioned absolutely over the calendar */}
+      <MinuteIndicator />
+      
+      {/* Single grid for headers and time slots */}
+      <div className="grid grid-cols-8 relative">
+        {/* Empty cell for time column */}
+        <div className="p-2 bg-white border-r border-gray-100 border-b border-gray-100 min-w-[80px]"></div>
+        {Array.isArray(weekDays) && weekDays.map((day, index) => {
+          if (!day || !(day instanceof Date) || isNaN(day.getTime())) {
+            return null; // Skip invalid dates
+          }
+          const isCurrentDay = isToday(day);
+          return (
+            <div key={index} className={`
+              p-2 text-center text-sm font-medium bg-white border-r border-gray-100 last:border-r-0 border-b border-gray-100
+              ${isCurrentDay ? 'bg-blue-50 text-blue-800' : 'text-gray-700'}
+            `}>
+              <div className="font-bold">{formatDate(day, 'EEE')}</div>
+              <div className="text-xs mb-2">{formatDate(day, 'MMM dd')}</div>
+              {/* Weather for this day */}
+              <DayWeather date={day} className="mt-1" />
+            </div>
+          );
+        })}
+        
+        {/* Time labels and day columns */}
+        
+        {/* Early Hours Toggle - rendered at the very top when collapsed */}
+        {(() => {
+          const { renderEarlyToggleTop } = SleepToggleBars({
+            earlyHoursCollapsed,
+            lateHoursCollapsed,
+            togglePositions,
+            onEarlyHoursToggle: handleEarlyHoursToggle,
+            onLateHoursToggle: handleLateHoursToggle,
+            isWeekView: true
+          });
+          return renderEarlyToggleTop();
+        })()}
+        
+        {Array.isArray(hours) && hours.map((hour, hourIndex) => {
+          if (!hour || !(hour instanceof Date) || isNaN(hour.getTime())) {
+            console.warn('Invalid hour in render:', hour);
+            return null;
+          }
+          
+          const hourValue = hour.getHours();
+          const isLate = isLateHour(hourValue);
+          
+          // Skip rendering if late hours are collapsed
+          if (lateHoursCollapsed && isLate) {
+            return null;
+          }
+          
+          return (
+            <Fragment key={hourIndex}>
+              {/* Time label */}
+              <div className="p-2 bg-white border-r border-gray-200 border-b border-gray-200 min-w-[80px] text-right pr-2 text-sm text-gray-600 font-medium">
+                {hour.toLocaleTimeString('en-US', { 
+                  hour: 'numeric', 
+                  minute: '2-digit',
+                  hour12: true 
+                })}
+              </div>
+              
+              {/* Day columns */}
+              {Array.isArray(weekDays) && weekDays.map((day, dayIndex) => {
+                if (!day || !(day instanceof Date) || isNaN(day.getTime())) {
+                  return null; // Skip invalid dates
+                }
+                
+                // Safely get events for this day and hour
+                const dayEvents = getEventsForDateAndHour(day, hourValue);
+                const isCurrentDay = isToday(day);
+                
+                return (
+                  <div
+                    key={dayIndex}
+                    className={`
+                      p-2 border-b border-gray-200 border-r border-gray-200 min-h-[60px] relative
+                      ${isCurrentDay ? 'bg-blue-50' : 'bg-white'}
+                      hover:bg-gray-50 transition-colors cursor-pointer
+                    `}
+                    onClick={() => onTimeSlotClick?.(day, hourValue)}
+                  >
+                    {/* Events for this time slot */}
+                    {dayEvents && dayEvents.length > 0 && (
+                      <div className="space-y-1">
+                        {dayEvents.map((event) => {
+                          if (!event || typeof event !== 'object') {
+                            return null;
+                          }
+                          
+                          return (
+                            <div
+                              key={event.id}
+                              className={`text-xs p-1 rounded mb-1 cursor-pointer hover:opacity-80 transition-opacity border ${getEventTypeColor(event)}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onEventClick?.(event);
+                              }}
+                            >
+                              <div className="flex items-center gap-1">
+                                <span className="text-xs">{getEventTypeIcon(event)}</span>
+                                <span className="truncate">{event.title || 'Untitled Event'}</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              
+              {/* Insert toggle bars at specific time positions */}
+              
+              {/* Early Hours Toggle - only show when expanded (collapsed is handled at top) */}
+              {(() => {
+                const { renderEarlyToggle } = SleepToggleBars({
+                  earlyHoursCollapsed,
+                  lateHoursCollapsed,
+                  togglePositions,
+                  onEarlyHoursToggle: handleEarlyHoursToggle,
+                  onLateHoursToggle: handleLateHoursToggle,
+                  isWeekView: true
+                });
+                return renderEarlyToggle(hourIndex);
+              })()}
+              
+              {/* Late Hours Toggle */}
+              {(() => {
+                const { renderLateToggle } = SleepToggleBars({
+                  earlyHoursCollapsed,
+                  lateHoursCollapsed,
+                  togglePositions,
+                  onEarlyHoursToggle: handleEarlyHoursToggle,
+                  onLateHoursToggle: handleLateHoursToggle,
+                  isWeekView: true
+                });
+                return renderLateToggle(hourIndex);
+              })()}
+            </Fragment>
+          );
+        })}
+        
+        {/* Remove the standalone toggle bars since they're now integrated into the hour loop */}
+      </div>
+    </div>
+  );
+}

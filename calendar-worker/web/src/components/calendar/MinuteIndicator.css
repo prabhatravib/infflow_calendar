@@ -1,0 +1,181 @@
+/* Minute Indicator Styles */
+.minute-indicator-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.minute-indicator-line {
+  position: absolute;
+  width: 2px;
+  height: 14px;
+  background-color: #3b82f6; /* Default blue color - will be overridden by weather */
+  border-radius: 2px;
+  transform: translateY(-50%);
+  z-index: 9;
+  box-shadow: 0 0 4px rgba(59, 130, 246, 0.3);
+  transition: background-color 0.3s ease, opacity 0.3s ease;
+}
+
+/* Weather-based color variations */
+.minute-indicator-line.weather-sunny {
+  background-color: #fde047; /* Yellow for sunny weather */
+  box-shadow: 0 0 4px rgba(253, 224, 71, 0.3);
+}
+
+.minute-indicator-line.weather-cloudy {
+  background-color: #9ca3af; /* Gray for cloudy/bad weather */
+  box-shadow: 0 0 4px rgba(156, 163, 175, 0.3);
+}
+
+.minute-indicator-line.weather-night {
+  background-color: #000000; /* Black for night time */
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+}
+
+.minute-indicator-minute {
+  position: absolute;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  color: #3b82f6; /* Default blue color - will be overridden by weather */
+  transform: translate(-100%, -50%);
+  white-space: nowrap;
+  z-index: 1000;
+  pointer-events: none;
+  user-select: none;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 2px 4px;
+  border-radius: 3px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: color 0.3s ease, opacity 0.3s ease;
+}
+
+/* Weather-based color variations for minute label */
+.minute-indicator-minute.weather-sunny {
+  color: #fde047; /* Yellow for sunny weather */
+}
+
+.minute-indicator-minute.weather-cloudy {
+  color: #9ca3af; /* Gray for cloudy/bad weather */
+}
+
+.minute-indicator-minute.weather-night {
+  color: #000000; /* Black for night time */
+}
+
+/* Weather emoji styling */
+.minute-indicator-minute .weather-emoji {
+  margin-left: 4px;
+  font-size: 10px;
+  opacity: 0.75;
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+  .minute-indicator-line {
+    background-color: #60a5fa;
+    box-shadow: 0 0 4px rgba(96, 165, 250, 0.3);
+  }
+  
+  .minute-indicator-minute {
+    color: #60a5fa;
+    background: rgba(17, 24, 39, 0.9);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Dark theme weather variations */
+  .minute-indicator-line.weather-sunny {
+    background-color: #fbbf24; /* Darker yellow for dark theme */
+    box-shadow: 0 0 4px rgba(251, 191, 36, 0.3);
+  }
+
+  .minute-indicator-line.weather-cloudy {
+    background-color: #6b7280; /* Darker gray for dark theme */
+    box-shadow: 0 0 4px rgba(107, 114, 128, 0.3);
+  }
+
+  .minute-indicator-minute.weather-sunny {
+    color: #fbbf24;
+  }
+
+  .minute-indicator-minute.weather-cloudy {
+    color: #6b7280;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .minute-indicator-minute {
+    font-size: 11px;
+    padding: 1px 3px;
+  }
+  
+  .minute-indicator-line {
+    width: 1.5px;
+    height: 12px;
+  }
+}
+
+/* Animation for smooth updates */
+.minute-indicator-line,
+.minute-indicator-minute {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Ensure the indicator is visible over calendar content */
+.calendar-week-view .grid,
+.calendar-day-view .grid {
+  position: relative;
+}
+
+/* Position the minute indicator on the right edge of time axis */
+.calendar-week-view .grid .minute-indicator-container,
+.calendar-day-view .grid .minute-indicator-container {
+  left: 0;
+  width: 80px; /* Width of time axis column */
+}
+
+/* Ensure the minute indicator is positioned correctly relative to the grid */
+.calendar-week-view .grid,
+.calendar-day-view .grid {
+  position: relative;
+}
+
+/* Position the minute indicator line and label */
+.minute-indicator-line {
+  left: 70px !important; /* Position on the right edge of time axis */
+}
+
+.minute-indicator-minute {
+  left: 65px !important; /* Position label to the left of the line */
+}
+
+/* Weather tooltip styling */
+.weather-tooltip {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 10px;
+  color: #374151;
+  pointer-events: none;
+  user-select: none;
+  z-index: 1001;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark theme tooltip */
+@media (prefers-color-scheme: dark) {
+  .weather-tooltip {
+    background: rgba(17, 24, 39, 0.95);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #f3f4f6;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+}

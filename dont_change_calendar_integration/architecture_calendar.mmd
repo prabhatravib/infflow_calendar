@@ -1,0 +1,178 @@
+graph TB
+    subgraph "Client Browser"
+        subgraph "UI Layer"
+            HTML[calendar.html]
+            CSS["Modular CSS<br/>calendar.css + themes"]
+            SIDEBAR[Sidebar<br/>Filters & Weather]
+            MODAL[Event Modal<br/>Details & Echo]
+            TOOLBAR[Calendar Toolbar]
+        end
+        
+        subgraph "JavaScript Core"
+            CORE["core.js<br/>Main Controller"]
+            UI_JS["ui.js<br/>Modal & Pub/Sub"]
+            API_JS["api.js<br/>API Client + CSRF"]
+            STATE["Event State<br/>allLoadedEvents"]
+        end
+        
+        subgraph "Calendar Components"
+            CAL_CONFIG["config.js<br/>FullCalendar Config"]
+            CAL_EVENTS["events.js<br/>Event Management"]
+            CAL_FILTERS["filters.js<br/>Work/Fun/Other"]
+            CAL_VIEWS["views.js<br/>Month Summary"]
+            SLEEP_TOGGLES["sleep-toggles.js<br/>12-6AM/10-12PM"]
+        end
+        
+        subgraph "Event Handlers"
+            EVT_HANDLERS["event-handlers.js<br/>Save/Delete/Echo"]
+            FORM_HANDLERS["form-handlers.js<br/>Validation"]
+            WEATHER_JS["weather.js<br/>Location Updates"]
+        end
+        
+        subgraph "Libraries"
+            FULLCALENDAR["FullCalendar v6"]
+            MERMAID_LIB["Mermaid.js"]
+        end
+    end
+    
+    subgraph "Flask Server (ASGI)"
+        subgraph "Application Core"
+            MAIN_PY["main.py<br/>CalendarASGIApp"]
+            INIT_PY["__init__.py<br/>create_app()"]
+            CONFIG_PY["config.py<br/>ENV Config"]
+        end
+        
+        subgraph "API Blueprints"
+            EVENTS_API["events.py<br/>CRUD + Generate"]
+            WEATHER_API["weather.py<br/>Forecast + Location"]
+            OAUTH_API["oauth_google.py<br/>OAuth Flow"]
+            FOLLOWUPS_API["followups.py<br/>Echo Events"]
+        end
+        
+        subgraph "Services Layer"
+            CAL_CLIENT["calendar_client.py<br/>Event Persistence"]
+            STORAGE["_storage.py<br/>JSONStorage"]
+            EVENT_GEN["event_generator.py<br/>AI Event Creation"]
+            WEATHER_SVC["weather_service.py<br/>Weather Classification"]
+            GOOGLE_CLIENT["google_calendar_client.py<br/>Import Events"]
+        end
+        
+        subgraph "AI Services"
+            ECHO_SVC["EventEchoService<br/>Follow-up Logic"]
+            LLM_SVC["llm.py<br/>Prompt Execution"]
+            OPENAI_CLIENT["ChatCompletionClient<br/>GPT-4 Wrapper"]
+            PARSER["parser.py<br/>Response Parser"]
+        end
+        
+        subgraph "Prompts & Templates"
+            FOLLOWUP_PROMPT["followup_events.txt<br/>2 Follow-ups"]
+            MERMAID_PROMPT["mermaid_flowchart.txt<br/>Diagram Template"]
+        end
+        
+        subgraph "Background Tasks"
+            SCHEDULER["scheduler.py<br/>Thread Runner"]
+            DAILY["daily.py<br/>00:05 Reminders"]
+            WEEKLY["weekly.py<br/>Monday 00:10"]
+            WEATHER_TASK["weather.py<br/>06:00 Updates"]
+        end
+        
+        subgraph "Data & Utils"
+            MODELS["CalendarEvent<br/>Dataclass"]
+            VALIDATORS["validators.py<br/>Event Validation"]
+            DATETIME["datetime.py<br/>TZ Handling"]
+            LOGGER["logger.py<br/>File + Console"]
+        end
+    end
+    
+    subgraph "Data Storage"
+        JSON_FILE["calendar_events.json<br/>Event Storage"]
+        TOKENS_FILE["google_tokens.json<br/>OAuth Tokens"]
+        ENV_FILE[".env<br/>API Keys"]
+    end
+    
+    subgraph "External Services"
+        OPENAI["OpenAI API<br/>GPT-4"]
+        GOOGLE_CAL["Google Calendar<br/>OAuth 2.0"]
+        OPEN_METEO["Open-Meteo<br/>Weather API"]
+        GEOCODING["Geocoding API"]
+    end
+    
+    %% Initialization Flow
+    HTML --> CORE
+    CORE --> UI_JS
+    CORE --> CAL_CONFIG
+    CORE --> FULLCALENDAR
+    CORE ==>|loadEvents| API_JS
+    
+    %% Event Creation Flow
+    MODAL -->|event:saved| UI_JS
+    UI_JS --> EVT_HANDLERS
+    EVT_HANDLERS ==>|POST /events| API_JS
+    API_JS -.-> EVENTS_API
+    EVENTS_API --> CAL_CLIENT
+    CAL_CLIENT --> STORAGE
+    STORAGE ==>|write| JSON_FILE
+    
+    %% AI Event Generation
+    MODAL -->|generate| API_JS
+    API_JS -.->|POST /generate-events| EVENTS_API
+    EVENTS_API --> EVENT_GEN
+    EVENT_GEN --> OPENAI_CLIENT
+    OPENAI_CLIENT -.-> OPENAI
+    
+    %% Echo/Follow-up Flow
+    MODAL -->|Echo this!| API_JS
+    API_JS -.->|POST /echo| FOLLOWUPS_API
+    FOLLOWUPS_API --> LLM_SVC
+    LLM_SVC --> FOLLOWUP_PROMPT
+    LLM_SVC --> OPENAI_CLIENT
+    FOLLOWUPS_API --> MERMAID_PROMPT
+    FOLLOWUPS_API ==>|render| MERMAID_LIB
+    
+    %% Weather Flow
+    WEATHER_UI -->|update| WEATHER_JS
+    WEATHER_JS -.->|POST /weather/location| WEATHER_API
+    WEATHER_API --> WEATHER_SVC
+    WEATHER_SVC -.-> OPEN_METEO
+    WEATHER_SVC -.-> GEOCODING
+    WEATHER_TASK ==>|daily| WEATHER_SVC
+    
+    %% Google OAuth Flow
+    TOOLBAR -->|Import Google| OAUTH_API
+    OAUTH_API --> GOOGLE_CLIENT
+    GOOGLE_CLIENT -.-> GOOGLE_CAL
+    GOOGLE_CLIENT ==>|store| TOKENS_FILE
+    
+    %% Filter System
+    SIDEBAR --> CAL_FILTERS
+    CAL_FILTERS ==>|filter| STATE
+    STATE ==>|render| FULLCALENDAR
+    
+    %% Background Tasks
+    MAIN_PY --> SCHEDULER
+    SCHEDULER -->|cron| DAILY
+    SCHEDULER -->|cron| WEEKLY
+    SCHEDULER -->|cron| WEATHER_TASK
+    
+    %% Configuration
+    ENV_FILE -.->|read| CONFIG_PY
+    CONFIG_PY --> OPENAI_CLIENT
+    CONFIG_PY --> GOOGLE_CLIENT
+    
+    %% Styling
+    classDef frontend fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef backend fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef storage fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef services fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    classDef ai fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    classDef tasks fill:#f1f8e9,stroke:#33691e,stroke-width:2px
+    classDef external fill:#ffebee,stroke:#b71c1c,stroke-width:2px
+    classDef config fill:#f9fbe7,stroke:#827717,stroke-width:2px
+    
+    class HTML,CSS,SIDEBAR,MODAL,TOOLBAR,CORE,UI_JS,API_JS,STATE,CAL_CONFIG,CAL_EVENTS,CAL_FILTERS,CAL_VIEWS,SLEEP_TOGGLES,EVT_HANDLERS,FORM_HANDLERS,WEATHER_JS,FULLCALENDAR,MERMAID_LIB frontend
+    class MAIN_PY,INIT_PY,CONFIG_PY,EVENTS_API,WEATHER_API,OAUTH_API,FOLLOWUPS_API,MODELS,VALIDATORS,DATETIME,LOGGER backend
+    class CAL_CLIENT,STORAGE,WEATHER_SVC,GOOGLE_CLIENT services
+    class EVENT_GEN,ECHO_SVC,LLM_SVC,OPENAI_CLIENT,PARSER,FOLLOWUP_PROMPT,MERMAID_PROMPT ai
+    class SCHEDULER,DAILY,WEEKLY,WEATHER_TASK tasks
+    class JSON_FILE,TOKENS_FILE,ENV_FILE storage
+    class OPENAI,GOOGLE_CAL,OPEN_METEO,GEOCODING external
