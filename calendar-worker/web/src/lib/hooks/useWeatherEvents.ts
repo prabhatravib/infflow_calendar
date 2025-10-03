@@ -11,31 +11,25 @@ export function useWeatherEvents() {
   useEffect(() => {
     const cachedEvents = weatherService.getCachedWeatherEvents();
     if (cachedEvents.length > 0) {
-      console.log('Loading cached weather events on mount:', cachedEvents.length);
       setWeatherEvents(cachedEvents);
     }
   }, []);
 
   const loadWeatherEvents = useCallback(async () => {
     if (!location) {
-      console.log('No location provided to useWeatherEvents');
       return;
     }
 
     try {
       setIsLoading(true);
-      console.log('Loading weather events for location:', location);
       const weatherData = await weatherService.getWeather(location);
-      console.log('Weather data received from service:', weatherData);
       
       if (!weatherData) {
-        console.log('No weather data received from service');
         setWeatherEvents([]);
         return;
       }
       
       const events = weatherService.generateWeatherEvents(weatherData);
-      console.log('Weather events generated:', events);
       setWeatherEvents(events);
     } catch (error) {
       console.error('Error loading weather events:', error);
@@ -51,9 +45,7 @@ export function useWeatherEvents() {
     try {
       setIsLoading(true);
       const weatherData = await weatherService.refreshWeather(location);
-      console.log('Refreshed weather data:', weatherData);
       const events = weatherService.generateWeatherEvents(weatherData);
-      console.log('Generated weather events after refresh:', events);
       setWeatherEvents(events);
     } catch (error) {
       console.error('Error refreshing weather events:', error);

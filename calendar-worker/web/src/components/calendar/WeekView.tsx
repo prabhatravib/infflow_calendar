@@ -46,7 +46,6 @@ export function WeekView({ date, events, onEventClick, onTimeSlotClick }: WeekVi
     const combined = [...safeEvents];
     
     // Add weather events
-    console.log('Weather events from hook:', weatherEvents);
     weatherEvents.forEach(weatherEvent => {
       const convertedEvent = {
         id: weatherEvent.id,
@@ -65,11 +64,9 @@ export function WeekView({ date, events, onEventClick, onTimeSlotClick }: WeekVi
         updated_at: new Date().toISOString()
       } as Event;
       
-      console.log('Converting weather event:', weatherEvent, 'to:', convertedEvent);
       combined.push(convertedEvent);
     });
     
-    console.log('Final allEvents array:', combined);
     return combined;
   }, [safeEvents, weatherEvents]);
 

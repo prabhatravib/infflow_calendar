@@ -83,9 +83,11 @@ function App() {
           break;
           
         case 'day':
-          // Get the day
+          // Get the day with some buffer to handle timezone issues
           startDate = new Date(baseDate);
+          startDate.setHours(0, 0, 0, 0); // Start of day
           endDate = new Date(baseDate);
+          endDate.setHours(23, 59, 59, 999); // End of day
           break;
           
         default:

@@ -12,6 +12,7 @@ export function CurrentTimeLine({ isWeekView = false }: CurrentTimeLineProps) {
   const lineRef = useRef<HTMLDivElement>(null);
   const retryCountRef = useRef(0);
   const MAX_RETRIES = 10;
+  const updateTimeoutRef = useRef<number | null>(null);
 
   // Get location from context
   const { location } = useLocation();
@@ -20,6 +21,12 @@ export function CurrentTimeLine({ isWeekView = false }: CurrentTimeLineProps) {
   const { indicatorColor } = useWeatherAwareMinuteIndicator(location);
 
   const updatePosition = useCallback(() => {
+    // Clear any pending updates to prevent rapid successive calls
+    if (updateTimeoutRef.current) {
+      clearTimeout(updateTimeoutRef.current);
+      updateTimeoutRef.current = null;
+    }
+
     const now = new Date();
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
@@ -140,11 +147,9 @@ export function CurrentTimeLine({ isWeekView = false }: CurrentTimeLineProps) {
 
   useEffect(() => {
     // Initial update with proper timing
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        updatePosition();
-      }, 50);
-    });
+    const initialTimeout = setTimeout(() => {
+      updatePosition();
+    }, 100);
 
     // Update every minute
     const interval = setInterval(updatePosition, 60000);
@@ -155,30 +160,38 @@ export function CurrentTimeLine({ isWeekView = false }: CurrentTimeLineProps) {
     };
     window.addEventListener('resize', handleResize, { passive: true });
 
-    // Observe DOM changes
+    // Observe DOM changes with debouncing to prevent infinite loops
     const calendarContainer = document.querySelector('.calendar-week-view, .calendar-day-view');
+    let observer: MutationObserver | null = null;
+    
     if (calendarContainer) {
-      const observer = new MutationObserver(() => {
-        requestAnimationFrame(updatePosition);
+      observer = new MutationObserver(() => {
+        // Debounce the update to prevent rapid successive calls
+        if (updateTimeoutRef.current) {
+          clearTimeout(updateTimeoutRef.current);
+        }
+        updateTimeoutRef.current = window.setTimeout(() => {
+          requestAnimationFrame(updatePosition);
+        }, 200); // Increased debounce to 200ms
       });
       
       observer.observe(calendarContainer, {
         childList: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: ['class', 'style']
+        subtree: false, // Only observe direct children to reduce sensitivity
+        attributes: false // Don't observe attribute changes to reduce triggers
       });
-
-      return () => {
-        clearInterval(interval);
-        window.removeEventListener('resize', handleResize);
-        observer.disconnect();
-      };
     }
 
     return () => {
+      clearTimeout(initialTimeout);
       clearInterval(interval);
       window.removeEventListener('resize', handleResize);
+      if (observer) {
+        observer.disconnect();
+      }
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
     };
   }, [updatePosition]);
 

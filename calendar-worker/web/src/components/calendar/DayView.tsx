@@ -87,7 +87,7 @@ export function DayView({ date, events, onEventClick, onTimeSlotClick }: DayView
       return [];
     }
     
-    return allEvents.filter(event => {
+    const filteredEvents = allEvents.filter(event => {
       if (!event || !event.start) {
         return false;
       }
@@ -105,12 +105,18 @@ export function DayView({ date, events, onEventClick, onTimeSlotClick }: DayView
         }
         
         const eventHour = eventDate.getHours();
-        return isSameDay(eventDate, date) && eventHour === hour;
+        const isSameDayResult = isSameDay(eventDate, date);
+        const hourMatch = eventHour === hour;
+        
+        
+        return isSameDayResult && hourMatch;
       } catch (error) {
         console.error('Error processing event:', event, error);
         return false;
       }
     });
+    
+    return filteredEvents;
   };
 
   const getEventTypeColor = (event: Event) => {
@@ -150,6 +156,12 @@ export function DayView({ date, events, onEventClick, onTimeSlotClick }: DayView
 
   return (
     <div className="calendar-day-view relative">
+      {/* Minute Indicator - positioned absolutely over the calendar */}
+      <MinuteIndicator />
+      
+      {/* Current Time Line - horizontal line across the calendar at current time */}
+      <CurrentTimeLine isWeekView={false} />
+      
       {/* All-day events section (including weather) */}
       {(() => {
         const allDayEvents = allEvents.filter(event => {
@@ -189,12 +201,10 @@ export function DayView({ date, events, onEventClick, onTimeSlotClick }: DayView
       })()}
 
       {/* Time grid - restructured for perfect alignment */}
-      <div className="grid">
-        {/* Minute Indicator */}
-        <MinuteIndicator />
-        
-        {/* Current Time Line - horizontal line across the calendar at current time */}
-        <CurrentTimeLine isWeekView={false} />
+      <div
+        className="grid bg-white"
+        style={{ gridTemplateColumns: '80px 1fr', gap: '0px' }}
+      >
         
         {/* Early Hours Toggle - rendered at the very top when collapsed */}
         {(() => {
@@ -219,6 +229,12 @@ export function DayView({ date, events, onEventClick, onTimeSlotClick }: DayView
           const hourValue = hour.getHours();
           const isEarly = isEarlyHour(hourValue);
           const isLate = isLateHour(hourValue);
+          
+          // Skip rendering if late hours are collapsed
+          if (lateHoursCollapsed && isLate) {
+            return null;
+          }
+          
           const hourEvents = getEventsForHour(hourValue);
           
           return (
