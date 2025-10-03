@@ -241,14 +241,14 @@ export function DayView({ date, events, onEventClick, onTimeSlotClick }: DayView
             <Fragment key={hourIndex}>
               {/* Timeline column - hour label - positioned directly on the line */}
               <div
-                className={`text-sm text-black border-r border-gray-200 relative ${
+                className={`text-sm text-black border-r relative ${
                   isEarly ? 'time-slot-early-hours' : ''
                 } ${
                   isLate ? 'time-slot-late-hours' : ''
-                }`}
-                style={{ height: '60px', color: 'black', backgroundColor: 'white' }}
+                } ${hourIndex === 0 ? 'border-t' : ''}`}
+                style={{ height: '60px', color: 'black', backgroundColor: 'white', borderTopColor: '#e5e7eb', borderRightColor: '#e5e7eb' }}
               >
-                <div className="absolute top-0 left-0 right-0 h-px bg-gray-200"></div>
+                {hourIndex > 0 && <div className="absolute top-0 left-0 right-0 h-px bg-gray-200"></div>}
                 <div className="absolute top-0 right-2 transform -translate-y-1/2 bg-white px-1">
                   {formatTime(hour, 'h:mm a')}
                 </div>
@@ -256,12 +256,12 @@ export function DayView({ date, events, onEventClick, onTimeSlotClick }: DayView
 
               {/* Events column - event content */}
               <div
-                className={`p-2 border-t border-gray-200 border-r border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors ${
+                className={`p-2 border-r cursor-pointer hover:bg-gray-50 transition-colors ${
                   isEarly ? 'time-slot-early-hours' : ''
                 } ${
                   isLate ? 'time-slot-late-hours' : ''
-                }`}
-                style={{ height: '60px' }}
+                } ${hourIndex === 0 ? 'border-t' : ''}`}
+                style={{ height: '60px', borderTopColor: '#e5e7eb', borderRightColor: '#e5e7eb' }}
                 onClick={(e) => {
                   // Calculate which half of the hour was clicked
                   const rect = e.currentTarget.getBoundingClientRect();

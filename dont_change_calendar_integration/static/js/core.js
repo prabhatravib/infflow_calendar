@@ -287,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Remove manual sleep toggle checks
       
       // Initialize early/late hour toggle bar (row insertion at 6 AM)
-      import('./calendar/sleep-toggles.js').then(m => {
+      import('./calendar/sleep-toggles-ui.js').then(m => {
         if (m.initializeSleepToggles) {
           try {
             m.initializeSleepToggles(calendar);

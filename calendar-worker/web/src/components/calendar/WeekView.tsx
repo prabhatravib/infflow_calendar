@@ -250,8 +250,8 @@ export function WeekView({ date, events, onEventClick, onTimeSlotClick }: WeekVi
           return (
             <Fragment key={hourIndex}>
               {/* Time label - positioned directly on the line */}
-              <div className="bg-white border-r border-gray-200 min-w-[80px] text-right pr-2 text-sm text-gray-600 font-medium relative">
-                <div className="absolute top-0 left-0 right-0 h-px bg-gray-200"></div>
+              <div className={`bg-white border-r min-w-[80px] text-right pr-2 text-sm text-gray-600 font-medium relative ${hourIndex === 0 ? 'border-t' : ''}`} style={{ borderTopColor: '#e5e7eb', borderRightColor: '#e5e7eb' }}>
+                {hourIndex > 0 && <div className="absolute top-0 left-0 right-0 h-px bg-gray-200"></div>}
                 <div className="absolute top-0 right-2 transform -translate-y-1/2 bg-white px-1">
                   {hour.toLocaleTimeString('en-US', { 
                     hour: 'numeric', 
@@ -275,10 +275,12 @@ export function WeekView({ date, events, onEventClick, onTimeSlotClick }: WeekVi
                   <div
                     key={dayIndex}
                     className={`
-                      p-2 border-t border-gray-200 border-r border-gray-200 min-h-[60px] relative
+                      p-2 border-r min-h-[60px] relative
                       ${isCurrentDay ? 'bg-blue-50' : 'bg-white'}
                       hover:bg-gray-50 transition-colors cursor-pointer
+                      ${hourIndex === 0 ? 'border-t' : ''}
                     `}
+                    style={{ borderTopColor: '#e5e7eb', borderRightColor: '#e5e7eb' }}
                     onClick={(e) => {
                       // Calculate which half of the hour was clicked
                       const rect = e.currentTarget.getBoundingClientRect();
