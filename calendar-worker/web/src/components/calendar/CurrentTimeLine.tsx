@@ -136,9 +136,99 @@ export function CurrentTimeLine({ isWeekView = false }: CurrentTimeLineProps) {
       const columnWidth = availableWidth / 7;
       leftPosition = 80 + (calendarDayIndex * columnWidth);
     } else {
-      // For day view
-      const totalMinutes = currentHour * 60 + currentMinute;
-      topPosition = totalMinutes;
+      // For day view - use same logic as week view to find actual hour cells
+      const calendarContainer = document.querySelector('.calendar-day-view');
+      if (!calendarContainer) {
+        // Retry if container not found
+        if (retryCountRef.current < MAX_RETRIES) {
+          retryCountRef.current++;
+          setTimeout(updatePosition, 100);
+        }
+        setIsVisible(false);
+        return;
+      }
+
+      const calendarGrid = calendarContainer.querySelector('.grid');
+      if (!calendarGrid) {
+        // Retry if grid not found
+        if (retryCountRef.current < MAX_RETRIES) {
+          retryCountRef.current++;
+          setTimeout(updatePosition, 100);
+        }
+        setIsVisible(false);
+        return;
+      }
+
+      // Find time labels in day view
+      let timeLabels = calendarGrid.querySelectorAll('div[class*="text-sm text-black"]');
+      if (timeLabels.length === 0) {
+        // Try alternative selectors
+        const allDivs = calendarGrid.querySelectorAll('div');
+        const potentialLabels: Element[] = [];
+        allDivs.forEach(div => {
+          const text = div.textContent?.trim();
+          if (text && /^\d{1,2}:\d{2}(\s*(AM|PM|am|pm))?$/.test(text)) {
+            potentialLabels.push(div);
+          }
+        });
+        if (potentialLabels.length > 0) {
+          timeLabels = potentialLabels as unknown as NodeListOf<Element>;
+        }
+      }
+
+      if (timeLabels.length === 0) {
+        // Retry if no labels found
+        if (retryCountRef.current < MAX_RETRIES) {
+          retryCountRef.current++;
+          setTimeout(updatePosition, 100);
+        }
+        setIsVisible(false);
+        return;
+      }
+
+      // Find the current hour label
+      let currentHourLabel = null;
+      for (const label of timeLabels) {
+        const text = label.textContent?.trim();
+        if (!text) continue;
+        
+        // Check various time formats
+        const hour12 = currentHour === 0 ? 12 : currentHour > 12 ? currentHour - 12 : currentHour;
+        const ampm = currentHour < 12 ? 'AM' : 'PM';
+        
+        if (
+          text === `${currentHour.toString().padStart(2, '0')}:00` || 
+          text === `${currentHour}:00` ||
+          text === `${hour12}:00 ${ampm}` ||
+          text === `${hour12}:00 ${ampm.toLowerCase()}` ||
+          text.includes(`${currentHour}:00`) ||
+          text.includes(`${currentHour.toString().padStart(2, '0')}:00`)
+        ) {
+          currentHourLabel = label;
+          break;
+        }
+      }
+
+      if (!currentHourLabel) {
+        // Retry if current hour not found
+        if (retryCountRef.current < MAX_RETRIES) {
+          retryCountRef.current++;
+          setTimeout(updatePosition, 100);
+        }
+        setIsVisible(false);
+        return;
+      }
+
+      // Success - reset retry count
+      retryCountRef.current = 0;
+
+      const calendarRect = calendarGrid.getBoundingClientRect();
+      const labelRect = currentHourLabel.getBoundingClientRect();
+      
+      const hourHeight = 60; // Each hour is 60px
+      const minuteOffset = (currentMinute / 60) * hourHeight;
+      topPosition = (labelRect.top - calendarRect.top) + minuteOffset;
+      leftPosition = 80; // Start after time column in day view
     }
     
     setPosition({ top: topPosition, left: leftPosition });

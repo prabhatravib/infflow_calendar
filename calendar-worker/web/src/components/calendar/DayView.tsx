@@ -239,38 +239,39 @@ export function DayView({ date, events, onEventClick, onTimeSlotClick }: DayView
           
           return (
             <Fragment key={hourIndex}>
-              {/* Timeline column - hour label - positioned directly on the line */}
+              {/* Timeline column - hour label - NO horizontal lines, just the time */}
               <div
-                className={`text-sm text-black border-r relative ${
+                className={`text-sm text-black border-r relative flex items-start pt-0 ${
                   isEarly ? 'time-slot-early-hours' : ''
                 } ${
                   isLate ? 'time-slot-late-hours' : ''
-                } ${hourIndex === 0 ? 'border-t' : ''}`}
-                style={{ height: '60px', color: 'black', backgroundColor: 'white', borderTopColor: '#e5e7eb', borderRightColor: '#e5e7eb' }}
+                }`}
+                style={{ height: '60px', color: 'black', backgroundColor: 'white', borderRightColor: '#e5e7eb' }}
               >
-                {hourIndex > 0 && <div className="absolute top-0 left-0 right-0 h-px bg-gray-200"></div>}
                 <div className="absolute top-0 right-2 transform -translate-y-1/2 bg-white px-1">
                   {formatTime(hour, 'h:mm a')}
                 </div>
               </div>
 
-              {/* Events column - event content */}
+              {/* Events column - event content with horizontal lines */}
               <div
-                className={`p-2 border-r cursor-pointer hover:bg-gray-50 transition-colors ${
+                className={`p-2 border-r border-t cursor-pointer hover:bg-gray-50 transition-colors relative ${
                   isEarly ? 'time-slot-early-hours' : ''
                 } ${
                   isLate ? 'time-slot-late-hours' : ''
-                } ${hourIndex === 0 ? 'border-t' : ''}`}
-                style={{ height: '60px', borderTopColor: '#e5e7eb', borderRightColor: '#e5e7eb' }}
-                onClick={(e) => {
+                }`}
+                style={{ height: '60px', borderRightColor: '#e5e7eb', borderTopColor: '#e5e7eb' }}
+              >
+                <div
+                  className="relative h-full w-full"
+                  onClick={(e) => {
                   // Calculate which half of the hour was clicked
                   const rect = e.currentTarget.getBoundingClientRect();
                   const clickY = e.clientY - rect.top;
                   const halfHeight = rect.height / 2;
                   const minute = clickY < halfHeight ? 0 : 30;
                   onTimeSlotClick?.(date, hourValue, minute);
-                }}
-              >
+                }}>
                 {hourEvents.map((event) => (
                   <div
                     key={event.id}
@@ -286,6 +287,7 @@ export function DayView({ date, events, onEventClick, onTimeSlotClick }: DayView
                     </div>
                   </div>
                 ))}
+                </div>
               </div>
               
               {/* Insert toggle bars at specific time positions */}

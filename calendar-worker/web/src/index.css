@@ -246,15 +246,7 @@ html, body {
 }
 
 /* Day view time slot styling - unified borders for perfect alignment */
-.calendar-day-view .grid > div {
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
-  position: relative;
-}
-
-.calendar-day-view .grid > div:last-child {
-  border-bottom: none;
-}
+/* Removed global border-bottom from .grid > div to allow per-column control */
 
 /* Remove duplicate border styles and pseudo-elements */
 .calendar-day-view .border-r > div {
