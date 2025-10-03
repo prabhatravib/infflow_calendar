@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import type { Event, CreateEventRequest, UpdateEventRequest } from '../../lib/api';
 import { ErrorBoundary } from '../ErrorBoundary';
 import { EchoTab } from './EchoTab';
+import { EventForm } from './EventForm';
+import { useEchoGeneration } from '../../hooks/useEchoGeneration';
 
 interface EventModalProps {
   isOpen: boolean;
@@ -39,8 +41,15 @@ export function EventModal({
   
   // Echo-related state
   const [activeTab, setActiveTab] = useState<'details' | 'echo'>('details');
-  const [hasEcho, setHasEcho] = useState(false);
-  const [isGeneratingEcho, setIsGeneratingEcho] = useState(false);
+  
+  // Use the echo generation hook
+  const {
+    hasEcho,
+    isGeneratingEcho,
+    handleEchoGeneration,
+    handleEchoReset,
+    initializeEchoState
+  } = useEchoGeneration({ localEvent, setLocalEvent });
 
   // Function to reset form to default values
   const resetForm = () => {
@@ -53,8 +62,7 @@ export function EventModal({
     setTimezone('America/New_York');
     setEventType('other');
     setActiveTab('details');
-    setHasEcho(false);
-    setIsGeneratingEcho(false);
+    initializeEchoState(null);
   };
 
   useEffect(() => {
@@ -76,10 +84,8 @@ export function EventModal({
       setEndTime(end.toTimeString().slice(0, 5));
       setTimezone(event.tz);
       
-      // Check if event has echo data
-      if (event.flowchart) {
-        setHasEcho(true);
-      }
+      // Initialize echo state
+      initializeEchoState(event);
     } else if (selectedDate) {
       // Creating new event - reset form first, then set date/time
       resetForm();
@@ -181,106 +187,6 @@ export function EventModal({
     }
   };
 
-  const handleEchoGeneration = async () => {
-    if (!localEvent?.id) return;
-    
-    setIsGeneratingEcho(true);
-    try {
-      console.log('Generating echo for event:', localEvent.id);
-      
-      // Add timeout to prevent hanging requests
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-      
-      const response = await fetch(`/api/events/${localEvent.id}/echo`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: 'demo-user' }),
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
-      console.log('Echo API response status:', response.status);
-      console.log('Echo API response headers:', Object.fromEntries(response.headers.entries()));
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Echo API response data:', data);
-        
-        // Validate the response data
-        if (!data || typeof data.mermaid !== 'string') {
-          console.error('Invalid response format:', { data, mermaidType: typeof data?.mermaid });
-          throw new Error(`Invalid response format from Echo API. Expected string, got: ${typeof data?.mermaid}`);
-        }
-        
-        // Update echo state
-        setHasEcho(true);
-        
-        // Only refresh the current event data to get the updated flowchart
-        // Don't refresh all events to avoid calendar re-rendering
-        if (localEvent?.id) {
-          try {
-            const response = await fetch(`/api/events/${localEvent.id}`);
-            if (response.ok) {
-              const responseData = await response.json();
-              console.log('Updated event data:', responseData);
-              
-              // Extract the event from the response
-              const updatedEvent = responseData.event;
-              
-              // Update the local event state with the new flowchart
-              if (updatedEvent && updatedEvent.flowchart) {
-                console.log('Setting localEvent to:', updatedEvent);
-                setLocalEvent(updatedEvent); // Update the local event state with new data
-                setHasEcho(true);
-                console.log('Event data refreshed with new flowchart');
-              } else {
-                console.log('No flowchart found in updated event:', updatedEvent);
-              }
-            }
-          } catch (fetchError) {
-            console.warn('Failed to fetch updated event:', fetchError);
-            // Don't fail the entire operation for this
-          }
-        }
-      } else {
-        const errorText = await response.text();
-        console.error('Echo API error response:', errorText);
-        throw new Error(`Failed to generate echo: ${response.status} ${errorText}`);
-      }
-    } catch (error: unknown) {
-      console.error('Error generating echo:', error);
-      
-      // Handle specific error types
-      if (error instanceof Error) {
-        if (error.name === 'AbortError') {
-          alert('Echo generation timed out. Please try again.');
-        } else if (error.message.includes('Invalid response format')) {
-          alert('Received invalid data from server. Please try again.');
-        } else {
-          alert(`Failed to generate echo events: ${error.message}`);
-        }
-      } else {
-        alert('Failed to generate echo events: Unknown error occurred');
-      }
-      
-      // Reset state to safe values
-      setHasEcho(false);
-    } finally {
-      setIsGeneratingEcho(false);
-    }
-  };
-
-  const handleEchoReset = () => {
-    // Clear echo state when echo is reset
-    setHasEcho(false);
-    
-    // Update local event to remove flowchart
-    if (localEvent) {
-      const updatedEvent = { ...localEvent, flowchart: undefined };
-      setLocalEvent(updatedEvent);
-    }
-  };
 
   if (!isOpen) return null;
 
@@ -336,176 +242,31 @@ export function EventModal({
           </div>
           
           {activeTab === 'details' && (
-            <form onSubmit={handleSubmit} className="px-4 py-2">
-              <div className="space-y-2">
-                {/* Title */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-0.5">
-                    Title *
-                  </label>
-                  <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Event title"
-                    required
-                  />
-                </div>
-                
-                {/* Description */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-0.5">
-                    Description
-                  </label>
-                  <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Event description"
-                    rows={2}
-                  />
-                </div>
-                
-                {/* Event Type */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-0.5">
-                    Event Type
-                  </label>
-                  <select
-                    value={eventType}
-                    onChange={(e) => setEventType(e.target.value as 'work' | 'fun' | 'other')}
-                    className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="work">Work</option>
-                    <option value="fun">Fun</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-                
-                {/* Start Date & Time */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-0.5">
-                      Start Date *
-                    </label>
-                    <input
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                      className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-0.5">
-                      Start Time *
-                    </label>
-                    <input
-                      type="time"
-                      value={startTime}
-                      onChange={(e) => setStartTime(e.target.value)}
-                      className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-                </div>
-                
-                {/* End Date & Time */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-0.5">
-                      End Date *
-                    </label>
-                    <input
-                      type="date"
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                      className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-0.5">
-                      End Time *
-                    </label>
-                    <input
-                      type="time"
-                      value={endTime}
-                      onChange={(e) => setEndTime(e.target.value)}
-                      className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-                </div>
-                
-                {/* Timezone */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-0.5">
-                    Timezone
-                  </label>
-                  <select
-                    value={timezone}
-                    onChange={(e) => setTimezone(e.target.value)}
-                    className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="America/New_York">Eastern Time</option>
-                    <option value="America/Chicago">Central Time</option>
-                    <option value="America/Denver">Mountain Time</option>
-                    <option value="America/Los_Angeles">Pacific Time</option>
-                    <option value="UTC">UTC</option>
-                    <option value="Europe/London">London</option>
-                    <option value="Europe/Paris">Paris</option>
-                    <option value="Asia/Tokyo">Tokyo</option>
-                  </select>
-                </div>
-              </div>
-              
-              {/* Actions */}
-              <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
-                <div className="flex space-x-2">
-                  {localEvent && onDelete && (
-                    <button
-                      type="button"
-                      onClick={handleDelete}
-                      disabled={isLoading}
-                      className="px-3 py-1.5 text-sm font-medium text-red-600 border border-red-600 rounded-md hover:bg-red-50 disabled:opacity-50"
-                    >
-                      Delete
-                    </button>
-                  )}
-                  {/* Echo generation button only shows for existing events with IDs */}
-                  {localEvent?.id && (
-                    <button
-                      type="button"
-                      onClick={handleEchoGeneration}
-                      disabled={isGeneratingEcho || isLoading}
-                      className="px-3 py-1.5 text-sm font-medium text-blue-600 border border-blue-600 rounded-md hover:bg-blue-50 disabled:opacity-50"
-                    >
-                      {isGeneratingEcho ? 'Generating...' : '🎯 Generate Echo Events'}
-                    </button>
-                  )}
-                </div>
-                
-                <div className="flex space-x-2">
-                  <button
-                    type="button"
-                    onClick={handleClose}
-                    disabled={isLoading}
-                    className="px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    {isLoading ? 'Saving...' : (event ? 'Update' : 'Create')}
-                  </button>
-                </div>
-              </div>
-            </form>
+            <EventForm
+              title={title}
+              setTitle={setTitle}
+              description={description}
+              setDescription={setDescription}
+              startDate={startDate}
+              setStartDate={setStartDate}
+              startTime={startTime}
+              setStartTime={setStartTime}
+              endDate={endDate}
+              setEndDate={setEndDate}
+              endTime={endTime}
+              setEndTime={setEndTime}
+              timezone={timezone}
+              setTimezone={setTimezone}
+              eventType={eventType}
+              setEventType={setEventType}
+              onSubmit={handleSubmit}
+              onCancel={handleClose}
+              onDelete={handleDelete}
+              onGenerateEcho={handleEchoGeneration}
+              isLoading={isLoading}
+              isGeneratingEcho={isGeneratingEcho}
+              localEvent={localEvent}
+            />
           )}
           
           {activeTab === 'echo' && (
