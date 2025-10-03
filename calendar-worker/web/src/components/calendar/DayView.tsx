@@ -13,7 +13,7 @@ interface DayViewProps {
   date: Date;
   events: Event[];
   onEventClick?: (event: Event) => void;
-  onTimeSlotClick?: (date: Date, hour: number) => void;
+  onTimeSlotClick?: (date: Date, hour: number, minute?: number) => void;
 }
 
 export function DayView({ date, events, onEventClick, onTimeSlotClick }: DayViewProps) {
@@ -21,6 +21,7 @@ export function DayView({ date, events, onEventClick, onTimeSlotClick }: DayView
   const {
     earlyHoursCollapsed,
     lateHoursCollapsed,
+    filterHoursByToggles,
     calculateTogglePositions,
     handleEarlyHoursToggle,
     handleLateHoursToggle
@@ -73,14 +74,12 @@ export function DayView({ date, events, onEventClick, onTimeSlotClick }: DayView
   // Filter hours based on sleep toggle states (for event rows only)
   const hours = useMemo(() => {
     try {
-      // TEMPORARILY DISABLE FILTERING TO DEBUG THE ISSUE
-      // return filterHoursByToggles(timelineHours);
-      return timelineHours; // Show all hours for now
+      return filterHoursByToggles(timelineHours);
     } catch (error) {
       console.error('Error filtering hours array:', error);
       return timelineHours; // Fallback to showing all hours
     }
-  }, [timelineHours]);
+  }, [filterHoursByToggles, timelineHours]);
 
   const getEventsForHour = (hour: number) => {
     if (!Array.isArray(allEvents)) {
@@ -230,8 +229,9 @@ export function DayView({ date, events, onEventClick, onTimeSlotClick }: DayView
           const isEarly = isEarlyHour(hourValue);
           const isLate = isLateHour(hourValue);
           
-          // Skip rendering if late hours are collapsed
-          if (lateHoursCollapsed && isLate) {
+          // Skip rendering if hours are collapsed (this should be handled by filterHoursByToggles)
+          // But keep this as a safety check
+          if ((earlyHoursCollapsed && isEarly) || (lateHoursCollapsed && isLate)) {
             return null;
           }
           
@@ -250,7 +250,7 @@ export function DayView({ date, events, onEventClick, onTimeSlotClick }: DayView
               >
                 <div className="absolute top-0 left-0 right-0 h-px bg-gray-200"></div>
                 <div className="absolute top-0 right-2 transform -translate-y-1/2 bg-white px-1">
-                  {formatTime(hour, 'HH:mm')}
+                  {formatTime(hour, 'h:mm a')}
                 </div>
               </div>
 
@@ -262,7 +262,14 @@ export function DayView({ date, events, onEventClick, onTimeSlotClick }: DayView
                   isLate ? 'time-slot-late-hours' : ''
                 }`}
                 style={{ height: '60px' }}
-                onClick={() => onTimeSlotClick?.(date, hourValue)}
+                onClick={(e) => {
+                  // Calculate which half of the hour was clicked
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const clickY = e.clientY - rect.top;
+                  const halfHeight = rect.height / 2;
+                  const minute = clickY < halfHeight ? 0 : 30;
+                  onTimeSlotClick?.(date, hourValue, minute);
+                }}
               >
                 {hourEvents.map((event) => (
                   <div

@@ -13,7 +13,7 @@ interface WeekViewProps {
   date: Date;
   events: Event[];
   onEventClick?: (event: Event) => void;
-  onTimeSlotClick?: (date: Date, hour: number) => void;
+  onTimeSlotClick?: (date: Date, hour: number, minute?: number) => void;
 }
 
 export function WeekView({ date, events, onEventClick, onTimeSlotClick }: WeekViewProps) {
@@ -279,7 +279,14 @@ export function WeekView({ date, events, onEventClick, onTimeSlotClick }: WeekVi
                       ${isCurrentDay ? 'bg-blue-50' : 'bg-white'}
                       hover:bg-gray-50 transition-colors cursor-pointer
                     `}
-                    onClick={() => onTimeSlotClick?.(day, hourValue)}
+                    onClick={(e) => {
+                      // Calculate which half of the hour was clicked
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const clickY = e.clientY - rect.top;
+                      const halfHeight = rect.height / 2;
+                      const minute = clickY < halfHeight ? 0 : 30;
+                      onTimeSlotClick?.(day, hourValue, minute);
+                    }}
                   >
                     {/* Events for this time slot */}
                     {dayEvents && dayEvents.length > 0 && (

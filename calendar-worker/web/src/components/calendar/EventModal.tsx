@@ -10,6 +10,7 @@ interface EventModalProps {
   calendarId: string;
   selectedDate?: Date;
   selectedHour?: number;
+  selectedMinute?: number;
   onSave: (eventData: CreateEventRequest | UpdateEventRequest) => Promise<void>;
   onDelete?: (eventId: string) => Promise<void>;
 }
@@ -21,6 +22,7 @@ export function EventModal({
   calendarId, 
   selectedDate, 
   selectedHour,
+  selectedMinute,
   onSave, 
   onDelete
 }: EventModalProps) {
@@ -82,22 +84,31 @@ export function EventModal({
       // Creating new event - reset form first, then set date/time
       resetForm();
       
-      const date = selectedDate.toISOString().split('T')[0];
+      // Use local date formatting to avoid timezone issues
+      const year = selectedDate.getFullYear();
+      const month = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
+      const day = selectedDate.getDate().toString().padStart(2, '0');
+      const date = `${year}-${month}-${day}`;
       setStartDate(date);
       setEndDate(date);
       
       if (selectedHour !== undefined) {
-        setStartTime(`${selectedHour.toString().padStart(2, '0')}:00`);
-        setEndTime(`${(selectedHour + 1).toString().padStart(2, '0')}:00`);
+        const startMinute = selectedMinute !== undefined ? selectedMinute : 0;
+        const startHour = selectedHour;
+        const endMinute = startMinute === 0 ? 30 : 0;
+        const endHour = startMinute === 0 ? startHour : startHour + 1;
+        
+        setStartTime(`${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}`);
+        setEndTime(`${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`);
       } else {
         setStartTime('09:00');
-        setEndTime('10:00');
+        setEndTime('09:30');
       }
     } else {
       // Modal opened without event or date - reset to defaults
       resetForm();
     }
-  }, [event, selectedDate, selectedHour]);
+  }, [event, selectedDate, selectedHour, selectedMinute]);
 
   // Cleanup effect to reset form when modal closes
   useEffect(() => {

@@ -17,6 +17,7 @@ function App() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [selectedHour, setSelectedHour] = useState<number | undefined>();
+  const [selectedMinute, setSelectedMinute] = useState<number | undefined>();
   const [currentView, setCurrentView] = useState<View>('week');
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -174,6 +175,68 @@ function App() {
     }
   }, [currentView]);
 
+  // Function to load events for a specific view and date (avoids state update timing issues)
+  const loadEventsForView = useCallback(async (view: View, date: Date) => {
+    try {
+      setIsLoading(true);
+      
+      let startDate: Date;
+      let endDate: Date;
+      
+      // Calculate date range based on the specified view
+      switch (view) {
+        case 'week':
+          // Get the week containing the specified date
+          const weekStart = new Date(date);
+          weekStart.setDate(date.getDate() - date.getDay()); // Start of week (Sunday)
+          const weekEnd = new Date(weekStart);
+          weekEnd.setDate(weekStart.getDate() + 6); // End of week (Saturday)
+          
+          startDate = weekStart;
+          endDate = weekEnd;
+          break;
+          
+        case 'month':
+          // Get the month containing the specified date
+          startDate = new Date(date.getFullYear(), date.getMonth(), 1);
+          endDate = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+          break;
+          
+        case 'day':
+          // Get the specified day with some buffer to handle timezone issues
+          startDate = new Date(date);
+          startDate.setHours(0, 0, 0, 0); // Start of day
+          endDate = new Date(date);
+          endDate.setHours(23, 59, 59, 999); // End of day
+          break;
+          
+        default:
+          // Default to week view
+          const defaultWeekStart = new Date(date);
+          defaultWeekStart.setDate(date.getDate() - date.getDay());
+          const defaultWeekEnd = new Date(defaultWeekStart);
+          defaultWeekEnd.setDate(defaultWeekStart.getDate() + 6);
+          
+          startDate = defaultWeekStart;
+          endDate = defaultWeekEnd;
+      }
+      
+      const fetchedEvents = await fetchEvents(
+        DEMO_CALENDAR_ID,
+        startDate.toISOString(),
+        endDate.toISOString()
+      );
+      
+      setEvents(fetchedEvents);
+      
+    } catch (error) {
+      console.error('Error loading events for view:', error);
+      setEvents([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   // Global navigation function for Echo flowchart clicks
   const gotoDateWithTitle = useCallback((dateStr: string, eventTitle?: string) => {
     try {
@@ -192,17 +255,18 @@ function App() {
       setSelectedEvent(null);
       setSelectedDate(undefined);
       setSelectedHour(undefined);
+      setSelectedMinute(undefined);
       
       // Navigate to the target date
       setCurrentDate(targetDate);
       
-      // Load events for the new date
-      loadEventsForDate(targetDate);
+      // Load events for the new date with current view
+      loadEventsForView(currentView, targetDate);
       
     } catch (error) {
       console.error('Error navigating to date:', error);
     }
-  }, [loadEventsForDate]);
+  }, [loadEventsForView, currentView]);
 
   // Expose the navigation function globally for Echo flowchart clicks
   useEffect(() => {
@@ -225,9 +289,10 @@ function App() {
     setIsModalOpen(true);
   };
 
-  const handleTimeSlotClick = (date: Date, hour: number) => {
+  const handleTimeSlotClick = (date: Date, hour: number, minute?: number) => {
     setSelectedDate(date);
     setSelectedHour(hour);
+    setSelectedMinute(minute);
     setSelectedEvent(null);
     setIsModalOpen(true);
   };
@@ -254,6 +319,7 @@ function App() {
       setSelectedEvent(null);
       setSelectedDate(undefined);
       setSelectedHour(undefined);
+      setSelectedMinute(undefined);
     } catch (error) {
       console.error('Error saving event:', error);
       throw error;
@@ -336,8 +402,8 @@ function App() {
                 onTimeSlotClick={handleTimeSlotClick}
                 onViewChange={(view) => {
                   setCurrentView(view);
-                  // Pass the current date to avoid state update timing issues
-                  loadEventsForDate(currentDate);
+                  // Load events for the new view with current date
+                  loadEventsForView(view, currentDate);
                 }}
                 onDateChange={(date) => {
                   setCurrentDate(date);
@@ -356,11 +422,13 @@ function App() {
             setSelectedEvent(null);
             setSelectedDate(undefined);
             setSelectedHour(undefined);
+            setSelectedMinute(undefined);
           }}
           event={selectedEvent}
           calendarId={DEMO_CALENDAR_ID}
           selectedDate={selectedDate}
           selectedHour={selectedHour}
+          selectedMinute={selectedMinute}
           onSave={handleSaveEvent}
           onDelete={selectedEvent ? handleDeleteEvent : undefined}
         />
