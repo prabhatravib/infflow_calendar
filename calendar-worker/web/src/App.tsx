@@ -2,15 +2,17 @@ import { useState, useEffect, useCallback } from 'react';
 import { Calendar } from './components/calendar/Calendar';
 import { EventModal } from './components/calendar/EventModal';
 import { Sidebar, EventFilters } from './components/calendar/Sidebar';
-import { LocationProvider } from './lib/contexts/LocationContext';
+import { HexaWorker } from './components/HexaWorker';
+import { LocationProvider, useLocation } from './lib/contexts/LocationContext';
 import { useEventFiltering } from './lib/hooks/useEventFiltering';
 import { fetchEvents, createEvent, updateEvent, deleteEvent } from './lib/api';
+import { weatherService } from './lib/services/weatherService';
 import type { Event } from './lib/api';
 import type { View } from './lib/date';
 
 const DEMO_CALENDAR_ID = '3c414e29-a3c3-4350-a334-5585cb22737a';
 
-function App() {
+function AppContent() {
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -20,12 +22,31 @@ function App() {
   const [selectedMinute, setSelectedMinute] = useState<number | undefined>();
   const [currentView, setCurrentView] = useState<View>('week');
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [weatherData, setWeatherData] = useState<any>(null);
+
+  // Get location from context
+  const { location } = useLocation();
 
   // Ensure events is always an array
   const safeEvents = Array.isArray(events) ? events : [];
 
   // Use the event filtering hook
   const { filteredEvents, updateFilter, getFilterStats } = useEventFiltering(safeEvents);
+
+  // Load weather data
+  useEffect(() => {
+    const loadWeather = async () => {
+      try {
+        const data = await weatherService.getWeather(location);
+        setWeatherData(data);
+        console.log('🌤️ Weather data loaded for voice worker:', location);
+      } catch (error) {
+        console.error('Error loading weather data:', error);
+      }
+    };
+    
+    loadWeather();
+  }, [location]);
 
 
 
@@ -372,67 +393,82 @@ function App() {
   const filterStats = getFilterStats();
 
   return (
-    <LocationProvider defaultLocation="New York">
-      <div className="min-h-screen bg-gray-50">
-        <div className="flex">
-          {/* Left Sidebar */}
-          <Sidebar onFilterChange={handleFilterChange} />
-          
-          {/* Main Content Area */}
-          <div className="flex-1 p-6">
-            <div className="mb-6">
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">Calendar</h1>
-              {!isLoading && (
-                <div className="text-sm text-gray-600">
-                  Showing {filterStats.visible} of {filterStats.total} events
-                  {filterStats.hidden > 0 && ` (${filterStats.hidden} hidden)`}
-                </div>
-              )}
-            </div>
-            
-            {isLoading ? (
-              <CalendarSkeleton />
-            ) : (
-              <Calendar
-                events={filteredEvents}
-                currentView={currentView}
-                currentDate={currentDate}
-                onEventClick={handleEventClick}
-                onDateClick={handleDateClick}
-                onTimeSlotClick={handleTimeSlotClick}
-                onViewChange={(view) => {
-                  setCurrentView(view);
-                  // Load events for the new view with current date
-                  loadEventsForView(view, currentDate);
-                }}
-                onDateChange={(date) => {
-                  setCurrentDate(date);
-                  // Pass the new date directly to avoid state update timing issues
-                  loadEventsForDate(date);
-                }}
-              />
+    <div className="min-h-screen bg-gray-50">
+      <div className="flex">
+        {/* Left Sidebar */}
+        <Sidebar onFilterChange={handleFilterChange} />
+        
+        {/* Main Content Area */}
+        <div className="flex-1 p-6">
+          <div className="mb-6 flex items-baseline gap-4">
+            <h1 className="text-3xl font-bold text-gray-800">Calendar</h1>
+            {!isLoading && (
+              <div className="text-sm text-gray-600">
+                Showing {filterStats.visible} of {filterStats.total} events
+                {filterStats.hidden > 0 && ` (${filterStats.hidden} hidden)`}
+              </div>
             )}
           </div>
+          
+          {isLoading ? (
+            <CalendarSkeleton />
+          ) : (
+            <Calendar
+              events={filteredEvents}
+              currentView={currentView}
+              currentDate={currentDate}
+              onEventClick={handleEventClick}
+              onDateClick={handleDateClick}
+              onTimeSlotClick={handleTimeSlotClick}
+              onViewChange={(view) => {
+                setCurrentView(view);
+                // Load events for the new view with current date
+                loadEventsForView(view, currentDate);
+              }}
+              onDateChange={(date) => {
+                setCurrentDate(date);
+                // Pass the new date directly to avoid state update timing issues
+                loadEventsForDate(date);
+              }}
+            />
+          )}
         </div>
-        
-        <EventModal
-          isOpen={isModalOpen}
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedEvent(null);
-            setSelectedDate(undefined);
-            setSelectedHour(undefined);
-            setSelectedMinute(undefined);
-          }}
-          event={selectedEvent}
-          calendarId={DEMO_CALENDAR_ID}
-          selectedDate={selectedDate}
-          selectedHour={selectedHour}
-          selectedMinute={selectedMinute}
-          onSave={handleSaveEvent}
-          onDelete={selectedEvent ? handleDeleteEvent : undefined}
-        />
       </div>
+      
+      {/* Voice Worker - positioned at bottom left */}
+      <HexaWorker
+        calendarData={{
+          events: safeEvents,
+          weatherData: weatherData,
+          location: location
+        }}
+      />
+      
+      <EventModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedEvent(null);
+          setSelectedDate(undefined);
+          setSelectedHour(undefined);
+          setSelectedMinute(undefined);
+        }}
+        event={selectedEvent}
+        calendarId={DEMO_CALENDAR_ID}
+        selectedDate={selectedDate}
+        selectedHour={selectedHour}
+        selectedMinute={selectedMinute}
+        onSave={handleSaveEvent}
+        onDelete={selectedEvent ? handleDeleteEvent : undefined}
+      />
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <LocationProvider defaultLocation="New York">
+      <AppContent />
     </LocationProvider>
   );
 }
